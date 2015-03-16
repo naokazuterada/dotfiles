@@ -48,7 +48,7 @@ ZSH_THEME="arrow"
 # Which plugins would you like to load? (plugins can be found in ~/.oh-my-zsh/plugins/*)
 # Custom plugins may be added to ~/.oh-my-zsh/custom/plugins/
 # Example format: plugins=(rails git textmate ruby lighthouse)
-plugins=(git osx terminalapp)
+plugins=(git osx terminalapp gem bundler rails)
 
 source $ZSH/oh-my-zsh.sh
 
@@ -61,7 +61,7 @@ alias f='foreman'
 alias m='middleman'
 alias v='vagrant'
 alias st='stree' # SourceTree CommandLineTool
-alias http='python -m SimpleHTTPServer' # SourceTree CommandLineTool
+alias http='python -m SimpleHTTPServer'
 
 # export PATH="/Users/terada/.rbenv/shims:/Users/terada/.rbenv/shims:/Users/terada/Qt/5.1.0/clang_64/bin:/Applications/SenchaSDKTools-2.0.0-beta3:/Applications/SenchaSDKTools-2.0.0-Beta/jsbuilder:/Applications/SenchaSDKTools-2.0.0-Beta/bin:/Applications/SenchaSDKTools-2.0.0-Beta:/usr/local/git/bin:/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin:/opt/X11/bin:/usr/local/bin:/opt/local/bin:/opt/local/sbin:/opt/local/lib/postgresql91/bin:/Applications/SenchaSDKTools-2.0.0-Beta:/bin:/Applications/SenchaSDKTools-2.0.0-Beta/bin:/Applications/SenchaSDKTools-2.0.0-Beta/jsbuilder:/Applications/SenchaSDKTools-2.0.0-beta3:/Users/terada/bin:/Users/terada/ratproxy:/usr/local/Cellar/android-sdk/20130219/tools:/usr/local/Cellar/android-sdk/20130219/platform-tools:/Users/terada/bin/repo:/usr/local/share/npm/bin"
 
@@ -72,6 +72,16 @@ export PATH=/Applications/SenchaSDKTools-2.0.0-beta3:$PATH
 export PATH=$HOME/bin:$PATH
 export SENCHA_SDK_TOOLS_2_0_0_BETA3="/Applications/SenchaSDKTools-2.0.0-beta3"
 export PATH=$HOME/Qt/5.1.0/clang_64/bin:$PATH
+
+export PATH="$HOME/.rbenv/bin:$PATH"
+eval "$(rbenv init -)"
+export PATH="$HOME/bin:$PATH"
+export PATH="$HOME/Qt5.1.0/5.1.0/clang_64/bin:$PATH"
+export PATH="/usr/local/heroku/bin:$PATH" ### Added by the Heroku Toolbelt
+export PATH=${PATH}:"/Users/terada/bin/FDK/Tools/osx"
+export PATH="$HOME/scripts:$PATH"
+# Initialization for FDK command line tools.Wed Dec  4 19:20:56 2013
+export FDK_EXE="/Users/terada/bin/FDK/Tools/osx"
 
 # Comment out by terada because command not found occur on zsh
 # Node Completion - Auto-generated, do not touch.
