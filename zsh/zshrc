@@ -65,23 +65,21 @@ alias http='python -m SimpleHTTPServer'
 
 # export PATH="/Users/terada/.rbenv/shims:/Users/terada/.rbenv/shims:/Users/terada/Qt/5.1.0/clang_64/bin:/Applications/SenchaSDKTools-2.0.0-beta3:/Applications/SenchaSDKTools-2.0.0-Beta/jsbuilder:/Applications/SenchaSDKTools-2.0.0-Beta/bin:/Applications/SenchaSDKTools-2.0.0-Beta:/usr/local/git/bin:/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin:/opt/X11/bin:/usr/local/bin:/opt/local/bin:/opt/local/sbin:/opt/local/lib/postgresql91/bin:/Applications/SenchaSDKTools-2.0.0-Beta:/bin:/Applications/SenchaSDKTools-2.0.0-Beta/bin:/Applications/SenchaSDKTools-2.0.0-Beta/jsbuilder:/Applications/SenchaSDKTools-2.0.0-beta3:/Users/terada/bin:/Users/terada/ratproxy:/usr/local/Cellar/android-sdk/20130219/tools:/usr/local/Cellar/android-sdk/20130219/platform-tools:/Users/terada/bin/repo:/usr/local/share/npm/bin"
 
-export PATH=/Applications/SenchaSDKTools-2.0.0-Beta:$PATH
-export PATH=/Applications/SenchaSDKTools-2.0.0-Beta/bin:$PATH
-export PATH=/Applications/SenchaSDKTools-2.0.0-Beta/jsbuilder:$PATH
-export PATH=/Applications/SenchaSDKTools-2.0.0-beta3:$PATH
-export PATH=$HOME/bin:$PATH
-export SENCHA_SDK_TOOLS_2_0_0_BETA3="/Applications/SenchaSDKTools-2.0.0-beta3"
-export PATH=$HOME/Qt/5.1.0/clang_64/bin:$PATH
+export PATH=$PATH:/Applications/SenchaSDKTools-2.0.0-Beta
+export PATH=$PATH:/Applications/SenchaSDKTools-2.0.0-Beta/bin
+export PATH=$PATH:/Applications/SenchaSDKTools-2.0.0-Beta/jsbuilder
+export PATH=$PATH:/Applications/SenchaSDKTools-2.0.0-beta3
+export PATH=$PATH:$HOME/bin
+export PATH=$PATH:$HOME/bin/FDK/Tools/osx
+export PATH=$PATH:$HOME/Qt/5.1.0/clang_64/bin
+export PATH=$PATH:$HOME/Qt5.1.0/5.1.0/clang_64/bin
+export PATH=$PATH:$HOME/.rbenv/bin
+export PATH=$PATH:/usr/local/heroku/bin ### Added by the Heroku Toolbelt
+export PATH=$PATH:$HOME/scripts
 
-export PATH="$HOME/.rbenv/bin:$PATH"
-eval "$(rbenv init -)"
-export PATH="$HOME/bin:$PATH"
-export PATH="$HOME/Qt5.1.0/5.1.0/clang_64/bin:$PATH"
-export PATH="/usr/local/heroku/bin:$PATH" ### Added by the Heroku Toolbelt
-export PATH=${PATH}:"/Users/terada/bin/FDK/Tools/osx"
-export PATH="$HOME/scripts:$PATH"
+export SENCHA_SDK_TOOLS_2_0_0_BETA3="/Applications/SenchaSDKTools-2.0.0-beta3"
 # Initialization for FDK command line tools.Wed Dec  4 19:20:56 2013
-export FDK_EXE="/Users/terada/bin/FDK/Tools/osx"
+export FDK_EXE=$HOME/bin/FDK/Tools/osx
 
 # Comment out by terada because command not found occur on zsh
 # Node Completion - Auto-generated, do not touch.
@@ -94,7 +92,7 @@ export FDK_EXE="/Users/terada/bin/FDK/Tools/osx"
 # for rbenv
 if which rbenv > /dev/null; then
   export RBENV_ROOT=$HOME/.rbenv
-  export PATH="$RBENV_ROOT/shims:$PATH"
+  export PATH=$PATH:$RBENV_ROOT/shims
   eval "$(rbenv init -)"
 fi
 
