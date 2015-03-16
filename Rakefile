@@ -16,7 +16,7 @@ def same_name_symlinks root, files
 end
 
 cleans = [
-          # ".zshrc",
+          ".zshrc",
           ".gitconfig",
           ".gitignore.global"
          ]
