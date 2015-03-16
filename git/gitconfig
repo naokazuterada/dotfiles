@@ -32,3 +32,10 @@
 	
 	# http://blog.blindgaenger.net/advanced_git_aliases.html
   this   = !git init && git add . && git commit -m \"Initial commit\"
+  
+  # diff zip archive
+  # git zip [start-SHA1] [end-SHA1] [filename]
+  zip = "!f () {\
+  	git archive --format=zip --prefix=${3}/ HEAD `git diff --name-only ${1} ${2}` -o ${3}.zip;\
+  };f"
+
