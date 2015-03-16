@@ -1,0 +1,49 @@
+#!/bin/bash
+# --------------------------------------
+# 目的
+# - グローバルにChefをインストールせずに、Bundlerを使ってプロジェクトディレクトリにknife initする
+# 
+# 条件
+# - Bundlerがグローバルにインストールされていること
+# 
+# 使い方
+# knife_solo_init [COOKBOOK]
+# 
+# TODO:
+# knife-soloを２回bundle installしているのが無駄かも
+# --------------------------------------
+ 
+TEMP_DIR=_knife_solo_init_temp
+cookbook_name=$1
+ 
+if [ -d $cookbook_name ]; then
+  echo "[ERROR] ディレクトリ[$cookbook_name]が既に存在します"
+  exit
+fi
+ 
+mkdir $TEMP_DIR
+cd $TEMP_DIR
+bundle init
+echo 'gem "knife-solo"' >> Gemfile
+bundle install --path=vendor/bundle
+bundle exec knife solo init $cookbook_name
+cd $cookbook_name
+bundle install --path=vendor/bundle --binstubs=vendor/bin
+cd ../../
+mv $TEMP_DIR/$cookbook_name ./
+rm -rf $TEMP_DIR
+ 
+# Gemfile
+cd ./$cookbook_name
+cat << EOT >> Gemfile
+source "https://rubygems.org"
+ 
+gem "knife-solo"
+gem "berkshelf"
+ 
+EOT
+ 
+# Bundler
+bundle install
+ 
+exit 0

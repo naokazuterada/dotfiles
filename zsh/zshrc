@@ -75,7 +75,7 @@ export PATH=$PATH:$HOME/Qt/5.1.0/clang_64/bin
 export PATH=$PATH:$HOME/Qt5.1.0/5.1.0/clang_64/bin
 export PATH=$PATH:$HOME/.rbenv/bin
 export PATH=$PATH:/usr/local/heroku/bin ### Added by the Heroku Toolbelt
-export PATH=$PATH:$HOME/scripts
+export PATH=$PATH:$HOME/.dotfiles/functions
 
 export SENCHA_SDK_TOOLS_2_0_0_BETA3="/Applications/SenchaSDKTools-2.0.0-beta3"
 # Initialization for FDK command line tools.Wed Dec  4 19:20:56 2013
