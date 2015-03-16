@@ -1,90 +1,110 @@
-# ====================================
-# .zshrc
-# ====================================
+# Path to your oh-my-zsh installation.
+export ZSH=$HOME/.oh-my-zsh
 
-# ------------------------------------
-# Completion
-# ------------------------------------
-fpath=(/usr/local/share/zsh/function ${fpath})
-autoload -U compinit && compinit
-zstyle ':completion:*' verbose yes
-zstyle ':completion:*:descriptions' format '%B%d%b'
+# Set name of the theme to load.
+# Look in ~/.oh-my-zsh/themes/
+# Optionally, if you set this to "random", it'll load a random theme each
+# time that oh-my-zsh is loaded.
+ZSH_THEME="arrow"
 
-# Compacked complete list display
-setopt list_packed
+# Example aliases
+# alias zshconfig="mate ~/.zshrc"
+# alias ohmyzsh="mate ~/.oh-my-zsh"
 
-# Coloring complete list display
-zstyle ':completion:*' list-colors ''
+# Uncomment the following line to use case-sensitive completion.
+# CASE_SENSITIVE="true"
 
-# ------------------------------------
-# Command History
-# ------------------------------------
-HISTFILE=~/.zsh_history
-HISTSIZE=100000
-SAVEHIST=100000
+# Uncomment the following line to disable bi-weekly auto-update checks.
+# DISABLE_AUTO_UPDATE="true"
 
-# Ignore duplication command history list
-setopt hist_ignore_dups
+# Uncomment the following line to change how often to auto-update (in days).
+# export UPDATE_ZSH_DAYS=13
 
-# Share command history data
-setopt share_history
+# Uncomment the following line to disable colors in ls.
+# DISABLE_LS_COLORS="true"
 
-# Historical backward/forward search
-# with linehead string binded to ^P/^N
-autoload history-search-end
-zle -N history-beginning-search-backward-end history-search-end
-zle -N history-beginning-search-forward-end history-search-end
-bindkey "^P" history-beginning-search-backward-end
-bindkey "^N" history-beginning-search-forward-end
+# Uncomment the following line to disable auto-setting terminal title.
+# DISABLE_AUTO_TITLE="true"
 
-# ------------------------------------
-# Key bind (emacs)
-# ------------------------------------
-bindkey -e
+# Uncomment the following line to disable command auto-correction.
+# DISABLE_CORRECTION="true"
 
-# ------------------------------------
-# cd
-# ------------------------------------
-setopt auto_cd
+# Uncomment the following line to display red dots whilst waiting for completion.
+# COMPLETION_WAITING_DOTS="true"
 
-# Auto directory pushd
-# that you can get dirs list by cd -[tab]
-setopt auto_pushd
+# Uncomment the following line if you want to disable marking untracked files
+# under VCS as dirty. This makes repository status check for large repositories
+# much, much faster.
+# DISABLE_UNTRACKED_FILES_DIRTY="true"
 
-# ------------------------------------
-# Correct miss typing command
-# ------------------------------------
-setopt correct
+# Uncomment the following line if you want to change the command execution time
+# stamp shown in the history command output.
+# The optional three formats: "mm/dd/yyyy"|"dd.mm.yyyy"|"yyyy-mm-dd"
+# HIST_STAMPS="mm/dd/yyyy"
 
-# ------------------------------------
-# Oh-my-zsh settings
-# ------------------------------------
-ZSH=~/.oh-my-zsh
-ZSH_THEME="beer"
-plugins=(git ruby gem zsh-syntax-highlighting)
+# Would you like to use another custom folder than $ZSH/custom?
+# ZSH_CUSTOM=/path/to/new-custom-folder
 
-[ -d ~/.oh-my-zsh ] && source ~/.oh-my-zsh/oh-my-zsh.sh
+# Which plugins would you like to load? (plugins can be found in ~/.oh-my-zsh/plugins/*)
+# Custom plugins may be added to ~/.oh-my-zsh/custom/plugins/
+# Example format: plugins=(rails git textmate ruby lighthouse)
+plugins=(git osx terminalapp)
 
-# ------------------------------------
-# Read settings
-# ------------------------------------
-[ -f ~/.dotfiles/zsh/global      ] && source ~/.dotfiles/zsh/global
-[ -f ~/.dotfiles/zsh/alias       ] && source ~/.dotfiles/zsh/alias
-[ -f ~/.dotfiles/zsh/functions   ] && source ~/.dotfiles/zsh/functions
-[ -f ~/.dotfiles/zsh/docker      ] && source ~/.dotfiles/zsh/docker
-[ -f ~/.dotfiles/zsh/http_status ] && source ~/.dotfiles/zsh/http_status
-[ -f ~/.dotfiles/zsh/percol      ] && source ~/.dotfiles/zsh/percol
-[ -f ~/.local-dotfiles/zsh       ] && source ~/.local-dotfiles/zsh
+source $ZSH/oh-my-zsh.sh
 
-# ------------------------------------
-# Read OS specific settings
-# ------------------------------------
-case "${OSTYPE}" in
-    darwin*)
-	  [ -f ~/.dotfiles/zsh/osx ] && source ~/.dotfiles/zsh/osx
-	;;
+# User configuration
 
-    linux*)
-	  [ -f ~/.dotfiles/zsh/linux ] && source ~/.dotfiles/zsh/linux
-	;;
-esac
+autoload -Uz zmv
+
+alias d='cd ~/Desktop'
+alias f='foreman'
+alias m='middleman'
+alias v='vagrant'
+alias st='stree' # SourceTree CommandLineTool
+alias http='python -m SimpleHTTPServer' # SourceTree CommandLineTool
+
+# export PATH="/Users/terada/.rbenv/shims:/Users/terada/.rbenv/shims:/Users/terada/Qt/5.1.0/clang_64/bin:/Applications/SenchaSDKTools-2.0.0-beta3:/Applications/SenchaSDKTools-2.0.0-Beta/jsbuilder:/Applications/SenchaSDKTools-2.0.0-Beta/bin:/Applications/SenchaSDKTools-2.0.0-Beta:/usr/local/git/bin:/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin:/opt/X11/bin:/usr/local/bin:/opt/local/bin:/opt/local/sbin:/opt/local/lib/postgresql91/bin:/Applications/SenchaSDKTools-2.0.0-Beta:/bin:/Applications/SenchaSDKTools-2.0.0-Beta/bin:/Applications/SenchaSDKTools-2.0.0-Beta/jsbuilder:/Applications/SenchaSDKTools-2.0.0-beta3:/Users/terada/bin:/Users/terada/ratproxy:/usr/local/Cellar/android-sdk/20130219/tools:/usr/local/Cellar/android-sdk/20130219/platform-tools:/Users/terada/bin/repo:/usr/local/share/npm/bin"
+
+export PATH=/Applications/SenchaSDKTools-2.0.0-Beta:$PATH
+export PATH=/Applications/SenchaSDKTools-2.0.0-Beta/bin:$PATH
+export PATH=/Applications/SenchaSDKTools-2.0.0-Beta/jsbuilder:$PATH
+export PATH=/Applications/SenchaSDKTools-2.0.0-beta3:$PATH
+export PATH=$HOME/bin:$PATH
+export SENCHA_SDK_TOOLS_2_0_0_BETA3="/Applications/SenchaSDKTools-2.0.0-beta3"
+export PATH=$HOME/Qt/5.1.0/clang_64/bin:$PATH
+
+# Comment out by terada because command not found occur on zsh
+# Node Completion - Auto-generated, do not touch.
+#shopt -s progcomp
+#for f in $(command ls ~/.node-completion); do
+# f="$HOME/.node-completion/$f"
+# test -f "$f" && . "$f"
+#done
+
+# for rbenv
+if which rbenv > /dev/null; then
+  export RBENV_ROOT=$HOME/.rbenv
+  export PATH="$RBENV_ROOT/shims:$PATH"
+  eval "$(rbenv init -)"
+fi
+
+#for bundler
+export PATH=$PATH:./vendor/bin:./bin
+
+# export MANPATH="/usr/local/man:$MANPATH"
+
+# You may need to manually set your language environment
+# export LANG=en_US.UTF-8
+
+# Preferred editor for local and remote sessions
+# if [[ -n $SSH_CONNECTION ]]; then
+#   export EDITOR='vim'
+# else
+#   export EDITOR='mvim'
+# fi
+
+# Compilation flags
+# export ARCHFLAGS="-arch x86_64"
+
+# ssh
+# export SSH_KEY_PATH="~/.ssh/dsa_id"

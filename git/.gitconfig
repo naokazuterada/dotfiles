@@ -1,0 +1,26 @@
+[user]
+	name = Naokazu Terada
+	email = naokazu.terada@gmail.com
+[color]
+	ui = true
+# [mergetool]
+# 	keepBackup = true
+[core]
+	editor = vi
+	quotepath = false
+	excludesfile = /Users/terada/.gitignore_global
+[difftool "sourcetree"]
+	cmd = opendiff \"$LOCAL\" \"$REMOTE\"
+	path = 
+[mergetool "sourcetree"]
+	cmd = " "
+	trustExitCode = true
+[merge]
+	ff = true
+[credential]
+	helper = osxkeychain
+[alias]
+	tree = log --graph --pretty='format:%C(yellow)%h%Creset %s %Cgreen(%an)%Creset %Cred%d%Creset'
+	
+	# http://blog.blindgaenger.net/advanced_git_aliases.html
+  this   = !git init && git add . && git commit -m \"Initial commit\"

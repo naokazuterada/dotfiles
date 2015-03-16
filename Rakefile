@@ -16,40 +16,18 @@ def same_name_symlinks root, files
 end
 
 cleans = [
-          ".emacs.d",
-          ".zshrc",
-          ".tmux.conf",
+          # ".zshrc",
           ".gitconfig",
-          ".gitignore.global",
-          ".gemrc",
-          ".slate",
-          ".slate.js",
-          ".percol.d"
+          ".gitignore.global"
          ]
 
 CLEAN.concat(cleans.map{|c| File.join(HOME,c)})
 
 task :default => :setup
 task :setup => [
-              "emacs:link",
               "git:link",
-              "tmux:link",
-              "zsh:link",
-              "percol:link",
-              "etc:link"]
-
-namespace :emacs do
-  desc "Create symbolic link to HOME"
-  task :link do
-    
-    # If .emacs.d is already exist, backup it
-    if File.exist?(File.join(HOME, ".emacs.d")) && !File.symlink?(File.join(HOME, ".emacs.d")) 
-      mv File.join(HOME, ".emacs.d"), File.join(HOME, ".emacs.d.org")
-    end
-    
-    symlink_ File.join(PWD, "emacs.d"), File.join(HOME,".emacs.d")
-  end
-end
+              "zsh:link"
+            ]
 
 namespace :zsh do
   desc "Create symbolic link to HOME/.zshrc"
@@ -67,27 +45,6 @@ end
 namespace :git do
   desc "Create symbolic link to HOME"
   task :link do    
-    same_name_symlinks File.join(PWD, "git"), ["gitconfig", "gitignore.global"]
-  end
-end
-
-namespace :tmux do  
-  desc "Create symblic link to HOME"
-  task :link do
-    same_name_symlinks File.join(PWD, "tmux"), ["tmux.conf"]
-  end
-end
-
-namespace :percol do
-  desc "Create symbolic link"
-  task :link do
-    symlink_ File.join(PWD, "percol.d"), File.join(HOME, ".percol.d")
-  end
-end
-
-namespace :etc do
-  task :link do
-    etcs  =  Dir.glob("etc" +  "/*").map{|path| File.basename(path)}
-    same_name_symlinks File.join(PWD, "etc"), etcs
+    same_name_symlinks File.join(PWD, "git"), ["gitconfig", "gitignore_global"]
   end
 end
