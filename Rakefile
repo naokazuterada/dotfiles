@@ -18,7 +18,7 @@ end
 cleans = [
           ".zshrc",
           ".gitconfig",
-          ".gitignore.global",
+          ".gitignore_global",
           ".gemrc"
          ]
 
@@ -26,8 +26,8 @@ CLEAN.concat(cleans.map{|c| File.join(HOME,c)})
 
 task :default => :setup
 task :setup => [
-              "git:link",
               "zsh:link",
+              "git:link",
               "etc:link"
             ]
 
