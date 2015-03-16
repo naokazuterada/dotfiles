@@ -18,7 +18,8 @@ end
 cleans = [
           ".zshrc",
           ".gitconfig",
-          ".gitignore.global"
+          ".gitignore.global",
+          ".gemrc"
          ]
 
 CLEAN.concat(cleans.map{|c| File.join(HOME,c)})
@@ -26,7 +27,8 @@ CLEAN.concat(cleans.map{|c| File.join(HOME,c)})
 task :default => :setup
 task :setup => [
               "git:link",
-              "zsh:link"
+              "zsh:link",
+              "etc:link"
             ]
 
 namespace :zsh do
@@ -46,5 +48,12 @@ namespace :git do
   desc "Create symbolic link to HOME"
   task :link do    
     same_name_symlinks File.join(PWD, "git"), ["gitconfig", "gitignore_global"]
+  end
+end
+
+namespace :etc do
+  task :link do
+    etcs  =  Dir.glob("etc" +  "/*").map{|path| File.basename(path)}
+    same_name_symlinks File.join(PWD, "etc"), etcs
   end
 end
