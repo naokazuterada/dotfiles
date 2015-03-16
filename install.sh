@@ -20,5 +20,5 @@ info "Enable dotfile, make symbolic link to '${HOME}' directory"
 rake setup
 
 # zsh tools
-# info "Install zsh tools"
-# ./zsh/install-tools.sh
+info "Install zsh tools"
+./zsh/install-tools.sh
