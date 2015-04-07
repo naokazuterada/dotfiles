@@ -19,6 +19,7 @@ cleans = [
           ".zshrc",
           ".gitconfig",
           ".gitignore_global",
+          ".tigrc",
           ".gemrc"
          ]
 
@@ -28,6 +29,7 @@ task :default => :setup
 task :setup => [
               "zsh:link",
               "git:link",
+              "tig:link",
               "etc:link"
             ]
 
@@ -46,8 +48,15 @@ end
 
 namespace :git do
   desc "Create symbolic link to HOME"
-  task :link do    
+  task :link do
     same_name_symlinks File.join(PWD, "git"), ["gitconfig", "gitignore_global"]
+  end
+end
+
+namespace :tig do
+  desc "Create symbolic link to HOME"
+  task :link do
+    same_name_symlinks File.join(PWD, "tig"), ["tigrc"]
   end
 end
 
