@@ -32,7 +32,7 @@
 	tree = log --graph --pretty='format:%C(yellow)%h%Creset %s %Cgreen(%an)%Creset %Cred%d%Creset'
 	
 	# http://blog.blindgaenger.net/advanced_git_aliases.html
-  this   = !git init && git add . && git commit -m \"Initial commit\"
+  this = !git init && git add . && git commit -m \"Initial commit\"
   
   # diff zip archive
   # git zip [start-SHA1] [end-SHA1] [filename]
@@ -40,3 +40,8 @@
   	git archive --format=zip --prefix=${3}/ HEAD `git diff --name-only ${1} ${2}` -o ${3}.zip;\
   };f"
 
+  # colorized cherry -v
+  # http://yuroyoro.hatenablog.com/entry/2012/10/22/153429
+  # ブランチ間の差分コミット表示
+  # git cherry [-v] [<upstream> [<head> [<limit>]]] を見やすく拡張したもの
+  diffbranch = "!f() { git cherry -v "$@" | awk '{ if($1 == \"+\"){ color = \"green\" } if($1 == \"-\"){ color = \"red\" } cmd = \"git show --date=short --no-notes --pretty=format:\\047%C\" color $1 \" %h %Cgreen%cd %Cblue%cn%x09%Creset%s\\047 --summary \" $2; cmd | getline t; close(cmd); print t }' ;}; f"
