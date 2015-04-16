@@ -57,6 +57,7 @@ source $ZSH/oh-my-zsh.sh
 autoload -Uz zmv
 
 alias d='cd ~/Desktop'
+alias s='cd ~/Sites'
 alias f='foreman'
 alias m='middleman'
 alias v='vagrant'
