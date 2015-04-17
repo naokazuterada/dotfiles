@@ -58,6 +58,8 @@ autoload -Uz zmv
 
 alias d='cd ~/Desktop'
 alias s='cd ~/Sites'
+alias dotfiles='cd ~/.dotfiles'
+alias dotfile='dotfiles'
 
 alias mkcd='source ~/.dotfiles/functions/mkcd'
 
