@@ -13,32 +13,35 @@
 # TODO
 # - railsと依存のgemを2回インストールしているので無駄かも。最初にDLしたものをコピーしてうまくいくだろうか？
 # --------------------------------------
- 
-TEMP_DIR=_rails_new_temp
+
 app_name=$1
- 
+
+if [ -z $app_name ]; then
+  echo "usage: rails_new [app_name]"
+  echo "[app_name]を指定して下さい"
+  exit
+fi
+
 if [ -d $app_name ]; then
   echo "[ERROR] ディレクトリ[$app_name]が既に存在します"
   exit
 fi
  
-mkdir $TEMP_DIR
-cd $TEMP_DIR
+mkdir -p $app_name
+cd $app_name
+
 bundle init
 echo 'gem "rails"' >> Gemfile
-bundle install --path=vendor/bundle
-bundle exec rails new $app_name --skip-bundle
-cd $app_name
 bundle install --path=vendor/bundle --binstubs=vendor/bin
-cd ../../
-mv $TEMP_DIR/$app_name ./
-rm -rf $TEMP_DIR
+rm ./Gemfile
+bundle exec rails new . --skip-bundle
+bundle install --path=vendor/bundle --binstubs=vendor/bin
  
 # git ---------
 # git関係をやりたくない場合はここを消してください
-cd $app_name
 git init
 rm .gitignore
+
 cat << EOT >> .gitignore
 *.DS_Store
 *.rbc
@@ -60,8 +63,8 @@ cat << EOT >> .gitignore
 .project
 capybara-*.html
 EOT
-git add --all
-git commit -m 'Initialize with rails (auto commit by rails_new)'
+
+git commit -a -m 'Initialize with rails (auto commit by rails_new)'
 # /git ---------
  
 exit 0
