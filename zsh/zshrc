@@ -61,7 +61,7 @@ alias s='cd ~/Sites'
 alias dotfiles='cd ~/.dotfiles'
 alias dotfile='dotfiles'
 
-alias mkcd='source ~/.dotfiles/functions/mkcd'
+alias mkcd='source ~/.dotfiles/functions/mkdir_cd.sh'
 
 alias f='foreman'
 alias m='middleman'
