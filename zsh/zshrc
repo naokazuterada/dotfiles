@@ -65,6 +65,9 @@ alias mkcd='source ~/.dotfiles/functions/mkdir_cd.sh'
 alias middleman_new='source ~/.dotfiles/functions/middleman_new.sh'
 alias m_new='middleman_new'
 
+alias rails_new='source ~/.dotfiles/functions/rails_new.sh'
+alias m_new='middleman_new'
+
 alias f='foreman'
 alias m='middleman'
 alias v='vagrant'

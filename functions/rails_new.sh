@@ -19,30 +19,26 @@ app_name=$1
 if [ -z $app_name ]; then
   echo "usage: rails_new [app_name]"
   echo "[app_name]を指定して下さい"
-  exit
-fi
-
-if [ -d $app_name ]; then
+elif [ -d $app_name ]; then
   echo "[ERROR] ディレクトリ[$app_name]が既に存在します"
-  exit
-fi
- 
-mkdir -p $app_name
-cd $app_name
+else
 
-bundle init
-echo 'gem "rails"' >> Gemfile
-bundle install --path=vendor/bundle --binstubs=vendor/bin
-rm ./Gemfile
-bundle exec rails new . --skip-bundle
-bundle install --path=vendor/bundle --binstubs=vendor/bin
- 
-# git ---------
-# git関係をやりたくない場合はここを消してください
-git init
-rm .gitignore
+  mkdir -p $app_name
+  cd $app_name
 
-cat << EOT >> .gitignore
+  bundle init
+  echo 'gem "rails"' >> Gemfile
+  bundle install --path=vendor/bundle --binstubs=vendor/bin
+  rm ./Gemfile
+  bundle exec rails new . --skip-bundle
+  bundle install --path=vendor/bundle --binstubs=vendor/bin
+   
+  # git ---------
+  # git関係をやりたくない場合はここを消してください
+  git init
+  rm .gitignore
+
+  cat << EOT >> .gitignore
 *.DS_Store
 *.rbc
 *.sassc
@@ -64,7 +60,7 @@ cat << EOT >> .gitignore
 capybara-*.html
 EOT
 
-git commit -a -m 'Initialize with rails (auto commit by rails_new)'
-# /git ---------
- 
-exit 0
+  git commit -a -m 'Initialize with rails (auto commit by rails_new)'
+  # /git ---------
+
+fi
