@@ -28,8 +28,6 @@ CLEAN.concat(cleans.map{|c| File.join(HOME,c)})
 task :default => :setup
 task :setup => [
               "zsh:link",
-              "git:link",
-              "tig:link",
               "etc:link"
             ]
 
@@ -43,20 +41,6 @@ namespace :zsh do
     end
 
     symlink_ File.join(PWD, "zsh/zshrc"), File.join(HOME, ".zshrc")      
-  end
-end
-
-namespace :git do
-  desc "Create symbolic link to HOME"
-  task :link do
-    same_name_symlinks File.join(PWD, "git"), ["gitconfig", "gitignore_global"]
-  end
-end
-
-namespace :tig do
-  desc "Create symbolic link to HOME"
-  task :link do
-    same_name_symlinks File.join(PWD, "tig"), ["tigrc"]
   end
 end
 
