@@ -8,3 +8,6 @@ atom/.node-gyp
 atom/gist-it.token
 atom/compile-cache
 .cask
+.DS_Store
+vendor/*
+.bundle/*
