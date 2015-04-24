@@ -73,6 +73,14 @@ alias f='foreman'
 alias v='vagrant'
 alias st='stree' # SourceTree
 
+# rbenvを使った環境用
+function r {
+  rbenv exec $@
+}
+function rb {
+  rbenv exec bundle $@
+}
+
 alias http='python -m SimpleHTTPServer'
 alias killps='ps -ax | peco | xargs kill -9' # プロセス名からkillする
 
