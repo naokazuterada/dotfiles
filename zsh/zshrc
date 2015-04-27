@@ -74,10 +74,10 @@ alias v='vagrant'
 alias st='stree' # SourceTree
 
 # rbenvを使った環境用
-function r {
+function re {
   rbenv exec $@
 }
-function rb {
+function reb {
   rbenv exec bundle $@
 }
 
