@@ -80,6 +80,9 @@ function re {
 function reb {
   rbenv exec bundle $@
 }
+function rebe {
+  rbenv exec bundle exec $@
+}
 
 alias http='python -m SimpleHTTPServer'
 alias killps='ps -ax | peco | xargs kill -9' # プロセス名からkillする
