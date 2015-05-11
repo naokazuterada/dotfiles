@@ -82,6 +82,7 @@ alias http='python -m SimpleHTTPServer'
 
 # プロセス名から選んでシグナルを送る
 alias psint='ps -ax | peco | xargs kill -2' # 割り込み（Ctrl+Cと同じ）
+alias psquit='ps -ax | peco | xargs kill -3' # 終了
 alias pskill='ps -ax | peco | xargs kill -9' # 強制終了
 alias psterm='ps -ax | peco | xargs kill -15' # 終了
 
