@@ -61,6 +61,7 @@ alias s='cd ~/Sites'
 alias dotfiles='cd ~/.dotfiles'
 alias dotfile='dotfiles'
 
+alias o='source ~/.dotfiles/functions/open_sublime_sourcetree.sh'
 alias mkcd='source ~/.dotfiles/functions/mkdir_cd.sh'
 
 alias m='middleman'
