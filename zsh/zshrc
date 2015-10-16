@@ -62,6 +62,7 @@ alias dotfiles='cd ~/.dotfiles'
 alias dotfile='dotfiles'
 
 alias o='source ~/.dotfiles/functions/open_with_sublime_sourcetree.sh'
+alias a='source ~/.dotfiles/functions/open_with_atom_sourcetree.sh'
 alias mkcd='source ~/.dotfiles/functions/mkdir_cd.sh'
 
 alias m='middleman'
