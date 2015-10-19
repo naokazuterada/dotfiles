@@ -1,28 +1,28 @@
 [user]
-	name = Naokazu Terada
-	email = naokazu.terada@gmail.com
+  name = Naokazu Terada
+  email = naokazu.terada@gmail.com
 
 [core]
-	editor = vi
-	quotepath = false
-	excludesfile = ~/.gitignore_global
+  editor = vi
+  quotepath = false
+  excludesfile = ~/.gitignore_global
 
 [color]
-	ui = true
+  ui = true
 
 [merge]
-	ff = true
+  ff = true
 
 [credential]
-	helper = osxkeychain
+  helper = osxkeychain
 
 [alias]
   # list of alias
   alias = !git config --list | grep 'alias\\.' | sed 's/alias\\.\\([^=]*\\)=\\(.*\\)/\\1\\\t => \\2/' | sort
 
-	co = checkout
+  co = checkout
 
-	# usage: git tree
+  # usage: git tree
   tree = log --graph --pretty='format:%C(yellow)%h%Creset %s %Cgreen(%an)%Creset %Cred%d%Creset'
 
   # usage: git this
@@ -32,7 +32,7 @@
   # usage: git zip [start-SHA1] [end-SHA1] [filename]
   # diff zip archive
   zip = "!f () {\
-  	git archive --format=zip --prefix=${3}/ HEAD `git diff --name-only --diff-filter=ACMRTUXB ${1} ${2}` -o ${3}.zip;\
+    git archive --format=zip --prefix=${3}/ HEAD `git diff --name-only --diff-filter=ACMRTUXB ${1} ${2}` -o ${3}.zip;\
   };f"
 
   # usage: git diffbranch
@@ -42,8 +42,8 @@
   # git cherry [-v] [<upstream> [<head> [<limit>]]] を見やすく拡張したもの
   diffbranch = "!f() { git cherry -v "$@" | awk '{ if($1 == \"+\"){ color = \"green\" } if($1 == \"-\"){ color = \"red\" } cmd = \"git show --date=short --no-notes --pretty=format:\\047%C\" color $1 \" %h %Cgreen%cd %Cblue%cn%x09%Creset%s\\047 --summary \" $2; cmd | getline t; close(cmd); print t }' ;}; f"
 [difftool "sourcetree"]
-	cmd = opendiff \"$LOCAL\" \"$REMOTE\"
-	path =
+  cmd = opendiff \"$LOCAL\" \"$REMOTE\"
+  path =
 [mergetool "sourcetree"]
-	cmd = /Applications/SourceTree.app/Contents/Resources/opendiff-w.sh \"$LOCAL\" \"$REMOTE\" -ancestor \"$BASE\" -merge \"$MERGED\"
-	trustExitCode = true
+  cmd = /Applications/SourceTree.app/Contents/Resources/opendiff-w.sh \"$LOCAL\" \"$REMOTE\" -ancestor \"$BASE\" -merge \"$MERGED\"
+  trustExitCode = true
