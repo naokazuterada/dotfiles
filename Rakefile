@@ -20,7 +20,8 @@ cleans = [
           ".gitconfig",
           ".gitignore_global",
           ".tigrc",
-          ".gemrc"
+          ".gemrc",
+          ".rspec"
          ]
 
 CLEAN.concat(cleans.map{|c| File.join(HOME,c)})
@@ -40,7 +41,7 @@ namespace :zsh do
       mv File.join(HOME, ".zshrc"), File.join(HOME, ".zshrc.org")
     end
 
-    symlink_ File.join(PWD, "zsh/zshrc"), File.join(HOME, ".zshrc")      
+    symlink_ File.join(PWD, "zsh/zshrc"), File.join(HOME, ".zshrc")
   end
 end
 
