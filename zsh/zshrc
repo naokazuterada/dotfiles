@@ -73,6 +73,7 @@ alias a='source ~/.dotfiles/functions/open_with_atom_sourcetree.sh'
 alias mkcd='source ~/.dotfiles/functions/mkdir_cd.sh'
 
 alias m='middleman'
+alias rebem='rbenv exec bundle exec middleman'
 alias middleman_new='source ~/.dotfiles/functions/middleman_new.sh'
 alias m_new='middleman_new'
 
