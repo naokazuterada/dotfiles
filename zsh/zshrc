@@ -68,6 +68,10 @@ alias od='open ~/Desktop'
 alias odot='open ~/Sites'
 alias os='open ~/Sites'
 
+# htpasswd
+# make file `.htpasswd` in current dir with MD5 hash
+alias htpasswd='htpasswd -cbm .htpasswd'
+
 alias o='source ~/.dotfiles/functions/open_with_sublime_sourcetree.sh'
 alias a='source ~/.dotfiles/functions/open_with_atom_sourcetree.sh'
 alias mkcd='source ~/.dotfiles/functions/mkdir_cd.sh'
