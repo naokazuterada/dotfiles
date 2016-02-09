@@ -62,6 +62,7 @@ alias s='cd ~/Sites'
 alias dotfiles='cd ~/.dotfiles'
 alias dotfile='dotfiles'
 alias dot='dotfiles'
+alias ops='cd ~/Documents/ops'
 
 # open XXX
 alias od='open ~/Desktop'
