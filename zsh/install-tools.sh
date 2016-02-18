@@ -35,3 +35,8 @@ fi
 #     info "Install z"
 #     git clone https://github.com/rupa/z.git ~/.zjump
 # fi
+
+if ! type wget >/dev/null 2>&1; then
+  info "Install wget"
+  brew install wget
+fi
