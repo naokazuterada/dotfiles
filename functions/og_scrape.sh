@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 # --------------------------------------
 # Goal:
 #   - Facebook og data bulk scraping

@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 # --------------------------------------
 # Goal:
 #   - Get list of page urls from base_url
