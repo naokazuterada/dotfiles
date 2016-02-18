@@ -2,6 +2,7 @@
 # --------------------------------------
 # Goal:
 #   - Facebook og data bulk scraping
+#
 # Usage:
 #   ./og_scrape.sh {url} {url} {url} ...
 # --------------------------------------

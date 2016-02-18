@@ -1,9 +1,14 @@
 #!/bin/sh
 # --------------------------------------
 # Goal:
-#   - Get list of page urls from base_url
+#   Get list of page urls from base_url
+#
+# Dependencies:
+#   - wget
+#
 # Usage:
 #   page_list.sh {base_url}
+#
 # Example:
 #   $ page_list.sh http://example.com
 #   http://example.com

@@ -1,17 +1,17 @@
 #!/bin/sh
 # --------------------------------------
-# 目的
-# - グローバルにRailsをインストールせずに、Bundlerを使ってプロジェクトディレクトリにRails:newする
-# - git init & gitignore
+# Goal:
+#   - グローバルにRailsをインストールせずに、Bundlerを使ってプロジェクトディレクトリにRails:newする
+#   - git init & gitignore
 #
-# 条件
-# - Bundlerがグローバルにインストールされていること
+# Dependencies:
+#   - bundler (installed global)
 #
-# 使い方
-# rails_new [APPNAME]
+# Usage:
+#   rails_new [APPNAME]
 #
-# TODO
-# - railsと依存のgemを2回インストールしているので無駄かも。最初にDLしたものをコピーしてうまくいくだろうか？
+# TODO:
+#   - railsと依存のgemを2回インストールしているので無駄かも。最初にDLしたものをコピーしてうまくいくだろうか？
 # --------------------------------------
 
 app_name=$1

@@ -1,16 +1,16 @@
 #!/bin/sh
 # --------------------------------------
-# 目的
-# - グローバルにChefをインストールせずに、Bundlerを使ってプロジェクトディレクトリにknife initする
+# Goal:
+#   グローバルにChefをインストールせずに、Bundlerを使ってプロジェクトディレクトリにknife initする
 #
-# 条件
-# - Bundlerがグローバルにインストールされていること
+# Dependencies:
+#   - bundler (installed global)
 #
-# 使い方
-# knife_solo_init [COOKBOOK]
+# Usage:
+#   knife_solo_init [COOKBOOK]
 #
 # TODO:
-# knife-soloを２回bundle installしているのが無駄かも
+#   knife-soloを２回bundle installしているのが無駄かも
 # --------------------------------------
 
 TEMP_DIR=_knife_solo_init_temp

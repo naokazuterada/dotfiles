@@ -2,8 +2,10 @@
 # --------------------------------------
 # Goal:
 #   - Get one line list of page urls from base_url
+#
 # Usage:
 #   page_list_oneline.sh {base_url}
+#
 # Example:
 #   $ page_list_oneline.sh http://example.com
 #   http://example.com http://example.com/about http://example.com/works http://example.com/works/01/ http://example.com/works/02/

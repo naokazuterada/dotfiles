@@ -1,7 +1,7 @@
 #!/bin/sh
 # --------------------------------------
-# 目的
-# - middleman-templateをcheckoutして、新規サイトをサクッと作り始める
+# Goal:
+#   middleman-templateをcheckoutして、新規サイトをサクッと作り始める
 # --------------------------------------
 
 app_name=$1
