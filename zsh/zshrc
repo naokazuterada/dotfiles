@@ -79,10 +79,7 @@ alias mkcd='source ~/.dotfiles/functions/mkdir_cd.sh'
 
 alias m='middleman'
 alias rebem='rbenv exec bundle exec middleman'
-alias middleman_new='source ~/.dotfiles/functions/middleman_new.sh'
 alias m_new='middleman_new'
-
-alias rails_new='source ~/.dotfiles/functions/rails_new.sh'
 
 alias f='foreman'
 alias rebef='rbenv exec bundle exec foreman start --procfile=ProcfileDev'
