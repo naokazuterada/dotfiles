@@ -3,13 +3,13 @@
 # 目的
 # - グローバルにRailsをインストールせずに、Bundlerを使ってプロジェクトディレクトリにRails:newする
 # - git init & gitignore
-# 
+#
 # 条件
 # - Bundlerがグローバルにインストールされていること
-# 
+#
 # 使い方
 # rails_new [APPNAME]
-# 
+#
 # TODO
 # - railsと依存のgemを2回インストールしているので無駄かも。最初にDLしたものをコピーしてうまくいくだろうか？
 # --------------------------------------
@@ -32,7 +32,7 @@ else
   rm ./Gemfile
   bundle exec rails new . --skip-bundle
   bundle install --path=vendor/bundle --binstubs=vendor/bin
-   
+
   # git ---------
   # git関係をやりたくない場合はここを消してください
   git init
