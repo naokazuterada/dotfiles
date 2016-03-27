@@ -1,21 +1,51 @@
 #!/bin/sh
-# --------------------------------------
-# Goal:
-#   Get list of page urls from base_url
-#
-# Dependencies:
-#   - wget
-#
-# Usage:
-#   page_list.sh {base_url}
-#
-# Example:
-#   $ page_list.sh http://example.com
-#   http://example.com
-#   http://example.com/about
-#   http://example.com/works
-#   http://example.com/works/01/
-#   http://example.com/works/02/
-# --------------------------------------
 
-wget --spider -r $1 2>&1 | grep '^--' | awk '{ print $3 }' | grep -vi '\.\(css\|js\|png\|gif\|jpg\|jpeg\|ico\|txt\)$'
+PROGNAME=$(basename $0)
+VERSION="0.1"
+
+function usage() {
+cat <<_EOT_
+Usage:
+  $PROGNAME [-u <base_url>] [-d <delimitter>] [-h]
+
+Description:
+  Get list of page urls from base_url.
+  Delimitter is optional (default is linebreak)
+
+Options:
+  -u ARG *
+  -d ARG
+  -h
+
+Dependencies:
+  - wget
+
+_EOT_
+exit 1
+}
+
+while getopts u:d:h OPT
+do
+  case $OPT in
+    "u" ) url="$OPTARG";;
+    "d" ) delimiter="$OPTARG";;
+    "h" ) usage;;
+    \?  ) usage;;
+  esac
+done
+
+if test "${url}" == ""; then
+  echo "[NOTICE] option 'u' is needed.\n"
+  usage
+fi
+
+result=`wget --spider -r $url 2>&1 | grep '^--' | awk '{ print $3 }' | grep -vi '\.\(css\|js\|png\|gif\|jpg\|jpeg\|ico\|txt\)$' | uniq | sort`
+
+if [ "${delimiter:+isexists}" = "isexists" ]; then
+  # replace linebreak to delimitter
+  result=`echo "$result" | awk -F\n -v ORS="$delimiter" '{ print }'`
+  # remove last delimiter
+  result=`echo "$result" | sed -e "s/$delimiter$//"`
+fi
+
+echo "$result"
