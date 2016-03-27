@@ -1,14 +1,44 @@
 #!/bin/sh
-# --------------------------------------
-# Goal:
-#   - Facebook og data bulk scraping
-#
-# Usage:
-#   ./og_scrape.sh {url} {url} {url} ...
-# --------------------------------------
 
-argv=("$@")
-for i in `seq 1 $#`
+PROGNAME=$(basename $0)
+VERSION="0.1"
+
+function usage() {
+cat <<_EOT_
+Usage:
+  $PROGNAME [-u <base_url>]
+  $PROGNAME <url> <url> <url>...
+
+Description:
+  Facebook og data bulk scraping
+
+Options:
+  -u ARG
+  -h
+
+Dependencies:
+  - page_list (https://github.com/naokazuterada/dotfiles/blob/master/functions/page_list)
+
+_EOT_
+exit 1
+}
+
+while getopts u:h OPT
 do
-  curl -d scrape=true -d id=${argv[$i-1]} https://graph.facebook.com/
+  case $OPT in
+    "u" ) url="$OPTARG";;
+    "h" ) usage;;
+    \?  ) usage;;
+  esac
+done
+
+if test "${url}" == ""; then
+  url_list=("$@")
+else
+  url_list=(`page_list -u $url -d ' '`)
+fi
+
+for i in `seq 1 ${#url_list[*]}`
+do
+  curl -d scrape=true -d id=${url_list[$i-1]} https://graph.facebook.com/
 done
