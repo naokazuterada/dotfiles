@@ -49,8 +49,12 @@ done
 if test "${url}" == ""; then
   url_list=("$@")
 else
-  if [ `which page_list` ]; then
-    url_list=(`page_list -u $url -d ' '`)
+  # load page_list script from same directory
+  dir_path=`dirname $0`
+  page_list_cmd=${dir_path}/page_list
+
+  if [ `which ${page_list_cmd}` ]; then
+    url_list=(`${page_list_cmd} -u $url -d ' '`)
   else
     need_page_list
   fi
