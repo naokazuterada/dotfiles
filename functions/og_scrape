@@ -23,6 +23,20 @@ _EOT_
 exit 1
 }
 
+function need_page_list() {
+cat <<_EOT_
+[NOTICE] You need to install page_list command if you use 'u' option
+
+It's available here.
+https://github.com/naokazuterada/dotfiles/blob/master/functions/page_list
+
+Or don't use 'u' command but just input urls like below.
+$PROGNAME <url> <url> <url>...
+
+_EOT_
+exit 1
+}
+
 while getopts u:h OPT
 do
   case $OPT in
@@ -35,7 +49,16 @@ done
 if test "${url}" == ""; then
   url_list=("$@")
 else
-  url_list=(`page_list -u $url -d ' '`)
+  if [ `which page_list` ]; then
+    url_list=(`page_list -u $url -d ' '`)
+  else
+    need_page_list
+  fi
+fi
+
+if [ ${#url_list[*]} = 0 ]; then
+  echo "[NOTICE] URL is empty."
+  usage
 fi
 
 for i in `seq 1 ${#url_list[*]}`
