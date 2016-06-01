@@ -120,6 +120,11 @@ export PATH=$PATH:./vendor/bin:./bin # for bundler
 export PATH=$PATH:./node_modules/.bin # for npm
 export PATH=$PATH:$HOME/.nodebrew/current/bin # for nodebrew
 
+# for Go-Lang
+export GOROOT=/usr/local/opt/go/libexec
+export GOPATH=$HOME
+export PATH=$PATH:$GOROOT/bin:$GOPATH/bin
+
 # for pyenv
 export PYENV_ROOT=$HOME/.pyenv
 export PATH=$PYENV_ROOT/bin:$PATH
