@@ -92,7 +92,10 @@ function reb  { rbenv exec bundle $@ }
 function rebe { rbenv exec bundle exec $@ }
 
 # start HTTP server
-alias http='python -m SimpleHTTPServer'
+alias pythonserver='python -m SimpleHTTPServer'
+alias web='pythonserver'
+alias http='pythonserver'
+alias server='pythonserver'
 
 # プロセス名から選んでシグナルを送る
 alias psint='ps -ax | peco | xargs kill -2' # 割り込み（Ctrl+Cと同じ）
