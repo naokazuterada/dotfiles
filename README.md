@@ -1,4 +1,4 @@
-naokazuterada does dotfiles [![MIT License](http://img.shields.io/badge/license-MIT-blue.svg?style=flat)](https://github.com/tcnksm/dotfiles/blob/master/LICENCE)
+naokazuterada dose dotfiles [![MIT License](http://img.shields.io/badge/license-MIT-blue.svg?style=flat)](https://github.com/tcnksm/dotfiles/blob/master/LICENCE)
 ====
 
 Your dotfiles are how you personalize your system. These are mine.
