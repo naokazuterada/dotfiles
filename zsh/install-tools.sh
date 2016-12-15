@@ -40,3 +40,9 @@ if ! type wget >/dev/null 2>&1; then
   info "Install wget"
   brew install wget
 fi
+
+if ! type gibo >/dev/null 2>&1; then
+  info "Install gibo"
+  brew install gibo
+  gibo -u
+fi

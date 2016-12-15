@@ -88,6 +88,7 @@ alias f='foreman'
 alias rebef='rbenv exec bundle exec foreman start --procfile=ProcfileDev'
 alias v='vagrant'
 alias st='stree' # SourceTree
+alias gitignore='gibo'
 
 # rbenvを使った環境用
 function re   { rbenv exec $@ }
