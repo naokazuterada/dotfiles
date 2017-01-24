@@ -81,11 +81,9 @@ alias a='source ~/.dotfiles/functions/open_with_atom_sourcetree.sh'
 alias mkcd='source ~/.dotfiles/functions/mkdir_cd.sh'
 
 alias m='middleman'
-alias rebem='rbenv exec bundle exec middleman'
 alias m_new='middleman_new'
 
 alias f='foreman'
-alias rebef='rbenv exec bundle exec foreman start --procfile=ProcfileDev'
 alias v='vagrant'
 alias st='stree' # SourceTree
 alias gitignore='gibo'
@@ -94,6 +92,10 @@ alias gitignore='gibo'
 function re   { rbenv exec $@ }
 function reb  { rbenv exec bundle $@ }
 function rebe { rbenv exec bundle exec $@ }
+
+alias rebi='reb install --path=vendor/bundle --binstubs=vendor/bin'
+alias rebem='rebe middleman'
+alias rebef='rebe foreman start --procfile=ProcfileDev'
 
 # start HTTP server
 alias pythonserver='python -m SimpleHTTPServer'
