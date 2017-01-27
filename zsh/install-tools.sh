@@ -14,22 +14,14 @@ error() {
 
 unset https_proxy
 
-if [[ ! -d ~/.oh-my-zsh ]]; then
-  info "Install oh-my-zsh"
-  git clone https://github.com/robbyrussell/oh-my-zsh.git ~/.oh-my-zsh
+if [[ ! -d ~/.zprezto ]]; then
+  info "Install zprezto"
+  git clone --recursive https://github.com/sorin-ionescu/prezto.git "${ZDOTDIR:-$HOME}/.zprezto"
+  setopt EXTENDED_GLOB
+  for rcfile in "${ZDOTDIR:-$HOME}"/.zprezto/runcoms/^README.md(.N); do
+    ln -s "$rcfile" "${ZDOTDIR:-$HOME}/.${rcfile:t}"
+  done
 fi
-
-# if [[ ! -d ~/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting ]]; then
-#     info "Install zsh-syntax-highlighting"
-#     pushd ~/.oh-my-zsh/custom/plugins
-#     git clone https://github.com/zsh-users/zsh-syntax-highlighting.git
-#     popd
-# fi
-
-# if [[ ! -f ~/.oh-my-zsh/themes/beer.zsh-theme ]]; then
-#     info "Install oh-my-zsh-theme"
-#     curl -fsSL https://raw.github.com/tcnksm/oh-my-zsh-beer-theme/master/beer.zsh-theme >> ~/.oh-my-zsh/themes/beer.zsh-theme
-# fi
 
 # if [[ ! -d ~/.zjump ]]; then
 #     info "Install z"
@@ -45,4 +37,9 @@ if ! type gibo >/dev/null 2>&1; then
   info "Install gibo"
   brew install gibo
   gibo -u
+fi
+
+if ! type shellcheck >/dev/null 2>&1; then
+  info "Install shellcheck"
+  brew install shellcheck
 fi

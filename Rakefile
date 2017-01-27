@@ -17,6 +17,7 @@ end
 
 cleans = [
           ".zshrc",
+          ".zshgit",
           ".gitconfig",
           ".gitignore_global",
           ".tigrc",
@@ -39,6 +40,17 @@ namespace :zsh do
     # If `.zshrc` is already exist, backup it
     if File.exist?(File.join(HOME, ".zshrc")) && !File.symlink?(File.join(HOME, ".zshrc"))
       mv File.join(HOME, ".zshrc"), File.join(HOME, ".zshrc.org")
+    end
+
+    symlink_ File.join(PWD, "zsh/zshrc"), File.join(HOME, ".zshrc")
+  end
+
+  desc "Create symbolic link to HOME/.zshgit"
+  task :link do
+
+    # If `.zshgit` is already exist, backup it
+    if File.exist?(File.join(HOME, ".zshgit")) && !File.symlink?(File.join(HOME, ".zshgit"))
+      mv File.join(HOME, ".zshgit"), File.join(HOME, ".zshgit.org")
     end
 
     symlink_ File.join(PWD, "zsh/zshrc"), File.join(HOME, ".zshrc")
