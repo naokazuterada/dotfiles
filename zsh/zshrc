@@ -68,7 +68,7 @@ alias psterm='ps -ax | peco | xargs kill -15' # 終了
 alias copy-rsa='cat ~/.ssh/id_rsa.pub | pbcopy'
 
 # middleman-templateをclone
-alias middleman-template='git clone --recursive git@github.com:naokazuterada/middleman-template.git'
+alias middleman_template='git clone --recursive https://github.com/naokazuterada/middleman-template.git'
 
 # export PATH="/Users/terada/.rbenv/shims:/Users/terada/.rbenv/shims:/Users/terada/Qt/5.1.0/clang_64/bin:/Applications/SenchaSDKTools-2.0.0-beta3:/Applications/SenchaSDKTools-2.0.0-Beta/jsbuilder:/Applications/SenchaSDKTools-2.0.0-Beta/bin:/Applications/SenchaSDKTools-2.0.0-Beta:/usr/local/git/bin:/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin:/opt/X11/bin:/usr/local/bin:/opt/local/bin:/opt/local/sbin:/opt/local/lib/postgresql91/bin:/Applications/SenchaSDKTools-2.0.0-Beta:/bin:/Applications/SenchaSDKTools-2.0.0-Beta/bin:/Applications/SenchaSDKTools-2.0.0-Beta/jsbuilder:/Applications/SenchaSDKTools-2.0.0-beta3:/Users/terada/bin:/Users/terada/ratproxy:/usr/local/Cellar/android-sdk/20130219/tools:/usr/local/Cellar/android-sdk/20130219/platform-tools:/Users/terada/bin/repo:/usr/local/share/npm/bin"
 
