@@ -39,9 +39,10 @@ alias m='middleman'
 alias m_new='middleman_new'
 
 alias f='foreman'
-alias v='vagrant'
-alias st='stree' # SourceTree
+alias g='git'
 alias gitignore='gibo'
+alias st='stree' # SourceTree
+alias v='vagrant'
 
 # rbenvを使った環境用
 function re   { rbenv exec $@ }
