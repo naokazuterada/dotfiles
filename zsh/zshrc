@@ -14,6 +14,13 @@ fi
 
 autoload -Uz zmv
 
+# Partially disable the zsh's autocorrect feature
+# 下記コマンドについて、Zshのcorrect機能を表示させないようにする
+cmmnds=(gulp)
+for cmmnd in "${cmmnds[@]}"; do
+  alias $cmmnd="nocorrect $cmmnd"
+done
+
 # cd XXX
 alias d='cd ~/Desktop'
 alias s='cd ~/Sites'
