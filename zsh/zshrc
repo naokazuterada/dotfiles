@@ -16,7 +16,7 @@ autoload -Uz zmv
 
 # Partially disable the zsh's autocorrect feature
 # 下記コマンドについて、Zshのcorrect機能を表示させないようにする
-cmmnds=(gulp rspec rubocop)
+cmmnds=(gulp rspec rubocop cf)
 for cmmnd in "${cmmnds[@]}"; do
   alias $cmmnd="nocorrect $cmmnd"
 done
