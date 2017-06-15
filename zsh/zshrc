@@ -98,7 +98,10 @@ export PATH=$PATH:/usr/local/heroku/bin ### Added by the Heroku Toolbelt
 export PATH=$PATH:$HOME/.dotfiles/functions
 export PATH=$PATH:./vendor/bin:./bin # for bundler
 export PATH=$PATH:./node_modules/.bin # for npm
-export PATH=$PATH:$HOME/.nodebrew/current/bin # for nodebrew
+# for anyenv->
+export PATH="$HOME/.anyenv/bin:$PATH"
+eval "$(anyenv init -)"
+# <-for anyenv
 
 # for Go-Lang
 export GOROOT=/usr/local/opt/go/libexec
