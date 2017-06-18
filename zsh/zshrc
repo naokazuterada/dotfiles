@@ -61,6 +61,9 @@ alias rebi='reb install --path=vendor/bundle --binstubs=vendor/bin'
 alias rebem='rebe middleman'
 alias rebef='rebe foreman start --procfile=ProcfileDev'
 
+# pyenvを使った環境用
+function pe { pyenv exec "$@"; }
+
 # start HTTP server
 alias pythonserver='python -m SimpleHTTPServer'
 alias web='pythonserver'
