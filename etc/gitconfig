@@ -41,9 +41,19 @@
   # ブランチ間の差分コミット表示
   # git cherry [-v] [<upstream> [<head> [<limit>]]] を見やすく拡張したもの
   diffbranch = "!f() { git cherry -v "$@" | awk '{ if($1 == \"+\"){ color = \"green\" } if($1 == \"-\"){ color = \"red\" } cmd = \"git show --date=short --no-notes --pretty=format:\\047%C\" color $1 \" %h %Cgreen%cd %Cblue%cn%x09%Creset%s\\047 --summary \" $2; cmd | getline t; close(cmd); print t }' ;}; f"
+
+  # 今日のコミットを確認する
+  # http://qiita.com/su_k/items/65ddde68173dab9a98e9
+  today = "!f () {\
+               git log --oneline --reverse --branches \
+               --since=midnight --date=iso \
+               --author=\"$(git config user.name)\" \
+               --format=\" - %C(auto)%h%Creset : %s %C(green)(%ad)%Creset\";\
+           };f"
+
 [difftool "sourcetree"]
 	cmd = opendiff \"$LOCAL\" \"$REMOTE\"
-	path = 
+	path =
 [mergetool "sourcetree"]
 	cmd = /Applications/SourceTree.app/Contents/Resources/opendiff-w.sh \"$LOCAL\" \"$REMOTE\" -ancestor \"$BASE\" -merge \"$MERGED\"
 	trustExitCode = true

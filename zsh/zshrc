@@ -53,13 +53,16 @@ alias st='stree' # SourceTree
 alias v='vagrant'
 
 # rbenvを使った環境用
-function re   { rbenv exec $@ }
-function reb  { rbenv exec bundle $@ }
-function rebe { rbenv exec bundle exec $@ }
+function re   { rbenv exec "$@"; }
+function reb  { rbenv exec bundle "$@"; }
+function rebe { rbenv exec bundle exec "$@"; }
 
 alias rebi='reb install --path=vendor/bundle --binstubs=vendor/bin'
 alias rebem='rebe middleman'
 alias rebef='rebe foreman start --procfile=ProcfileDev'
+
+# pyenvを使った環境用
+function pe { pyenv exec "$@"; }
 
 # start HTTP server
 alias pythonserver='python -m SimpleHTTPServer'
