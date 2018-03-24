@@ -46,6 +46,7 @@ alias mkcd='source ~/.dotfiles/functions/mkdir_cd.sh'
 alias m='middleman'
 alias m_new='middleman_new'
 
+alias n='npm'
 alias f='foreman'
 alias g='git'
 alias gitignore='gibo'
