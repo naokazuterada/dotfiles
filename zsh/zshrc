@@ -47,6 +47,7 @@ alias m='middleman'
 alias m_new='middleman_new'
 
 alias n='npm'
+alias nr='npm run'
 alias f='foreman'
 alias g='git'
 alias gitignore='gibo'
