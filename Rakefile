@@ -17,6 +17,7 @@ end
 
 cleans = [
           ".zshrc",
+          ".zpreztorc",
           ".zshgit",
           ".gitconfig",
           ".gitignore_global",
