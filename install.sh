@@ -22,3 +22,10 @@ rake setup
 # zsh tools
 info "Install zsh tools"
 ./zsh/install-tools.sh
+
+
+info "Link Sublime Text"
+ln -s "/Applications/Sublime Text.app/Contents/SharedSupport/bin/subl" /usr/local/bin/
+
+info "Link SourceTree"
+ln -s /Applications/SourceTree.app/Contents/Resources/stree /usr/local/bin/
