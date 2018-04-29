@@ -128,8 +128,8 @@ export FDK_EXE=$HOME/bin/FDK/Tools/osx
 # Node Completion - Auto-generated, do not touch.
 #shopt -s progcomp
 #for f in $(command ls ~/.node-completion); do
-# f="$HOME/.node-completion/$f"
-# test -f "$f" && . "$f"
+#  f="$HOME/.node-completion/$f"
+#  test -f "$f" && . "$f"
 #done
 
 # for rbenv
