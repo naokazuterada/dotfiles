@@ -105,6 +105,13 @@ export PATH=$PATH:/usr/local/heroku/bin ### Added by the Heroku Toolbelt
 export PATH=$PATH:$HOME/.dotfiles/functions
 export PATH=$PATH:./vendor/bin:./bin # for bundler
 export PATH=$PATH:./node_modules/.bin # for npm
+export PATH=/usr/local/share/npm/bin:$PATH
+
+# for ndenv->
+export PATH=$PATH:$HOME/.ndenv/bin
+eval "$(ndenv init -)"
+# <-for ndenv
+
 # for anyenv->
 #export PATH="$HOME/.anyenv/bin:$PATH"
 #eval "$(anyenv init -)"
