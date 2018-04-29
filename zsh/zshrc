@@ -106,8 +106,8 @@ export PATH=$PATH:$HOME/.dotfiles/functions
 export PATH=$PATH:./vendor/bin:./bin # for bundler
 export PATH=$PATH:./node_modules/.bin # for npm
 # for anyenv->
-export PATH="$HOME/.anyenv/bin:$PATH"
-eval "$(anyenv init -)"
+#export PATH="$HOME/.anyenv/bin:$PATH"
+#eval "$(anyenv init -)"
 # <-for anyenv
 
 # for Go-Lang
@@ -116,9 +116,9 @@ export GOPATH=$HOME
 export PATH=$PATH:$GOROOT/bin:$GOPATH/bin
 
 # for pyenv
-export PYENV_ROOT=$HOME/.pyenv
-export PATH=$PYENV_ROOT/bin:$PATH
-eval "$(pyenv init -)"
+#export PYENV_ROOT=$HOME/.pyenv
+#export PATH=$PYENV_ROOT/bin:$PATH
+#eval "$(pyenv init -)"
 
 export SENCHA_SDK_TOOLS_2_0_0_BETA3="/Applications/SenchaSDKTools-2.0.0-beta3"
 # Initialization for FDK command line tools.Wed Dec  4 19:20:56 2013
