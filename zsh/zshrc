@@ -48,6 +48,7 @@ alias m_new='middleman_new'
 
 alias n='npm'
 alias nr='npm run'
+alias nu='npx ncu -u' # Updating packages with 'node-check-updates'
 alias f='foreman'
 alias g='git'
 alias gitignore='gibo'
