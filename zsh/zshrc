@@ -46,9 +46,15 @@ alias mkcd='source ~/.dotfiles/functions/mkdir_cd.sh'
 alias m='middleman'
 alias m_new='middleman_new'
 
+# NPM
 alias n='npm'
-alias nr='npm run'
 alias nu='npx ncu -u' # Updating packages with 'node-check-updates'
+# Pecoを使ってnpm scriptsをリスト化
+alias nr='npm run $(commands | peco)'
+function commands () {
+  cat package.json | jq -r '.scripts | keys[]'
+}
+
 alias f='foreman'
 alias g='git'
 alias gitignore='gibo'
