@@ -44,6 +44,16 @@ if ! type shellcheck >/dev/null 2>&1; then
   brew install shellcheck
 fi
 
+if ! type peco >/dev/null 2>&1; then
+  info "Install peco"
+  brew install peco
+fi
+
+if ! type jq >/dev/null 2>&1; then
+  info "Install jq"
+  brew install jq
+fi
+
 if ! type subl >/dev/null 2>&1; then
   info "Link Sublime Text 3"
   ln -s "/Applications/Sublime Text.app/Contents/SharedSupport/bin/subl" /usr/local/bin/subl
