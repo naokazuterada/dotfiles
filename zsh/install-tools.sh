@@ -43,3 +43,13 @@ if ! type shellcheck >/dev/null 2>&1; then
   info "Install shellcheck"
   brew install shellcheck
 fi
+
+if ! type peco >/dev/null 2>&1; then
+  info "Install peco"
+  brew install peco
+fi
+
+if ! type jq >/dev/null 2>&1; then
+  info "Install jq"
+  brew install jq
+fi
