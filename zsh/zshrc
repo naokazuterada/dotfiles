@@ -143,12 +143,12 @@ export FDK_EXE=$HOME/bin/FDK/Tools/osx
 # test -f "$f" && . "$f"
 #done
 
-# for rbenv
-if which rbenv > /dev/null; then
-  export RBENV_ROOT=$HOME/.rbenv
-  export PATH=$PATH:$RBENV_ROOT/shims
-  eval "$(rbenv init -)"
-fi
+# for rbenv and phpenv
+# export RBENV_ROOT=/usr/local/var/rbenv <= 邪魔になるのでいらない。
+export PHPENV_ROOT=$HOME/.phpenv
+export PATH="$PATH:$PHPENV_ROOT/bin"
+eval "$(rbenv init -)"
+eval "$(phpenv init -)"
 
 # WP-CLI Tab completions
 # http://wp-cli.org/
