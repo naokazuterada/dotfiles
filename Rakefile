@@ -16,14 +16,14 @@ def same_name_symlinks root, files
 end
 
 cleans = [
-          ".zshrc",
-          ".zpreztorc",
-          ".zshgit",
+          ".gemrc",
           ".gitconfig",
           ".gitignore_global",
+          ".rspec",
           ".tigrc",
-          ".gemrc",
-          ".rspec"
+          ".zpreztorc",
+          ".zshgit",
+          ".zshrc"
          ]
 
 CLEAN.concat(cleans.map{|c| File.join(HOME,c)})
