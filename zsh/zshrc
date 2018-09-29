@@ -179,3 +179,5 @@ source /Users/terada/bin/wp-cli/wp-completion.bash
 
 test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell_integration.zsh"
 
+# ntfy
+eval "$(ntfy shell-integration)"
