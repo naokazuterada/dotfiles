@@ -95,6 +95,9 @@ alias middleman_template='git clone --recursive https://github.com/naokazuterada
 # 参考: https://getpocket.com/a/read/1262698222
 alias excel_cleanup='rm -rf ~/Library/Preferences/com.microsoft.Excel.plist ~/Library/Preferences/com.microsoft.office.plist ~/Library/Caches/Microsoft ~/Library/Caches/Microsoft\ Office'
 
+# PHP
+alias composer="php ~/composer.phar"
+
 # お遊び系
 alias matrix='cmatrix'
 
