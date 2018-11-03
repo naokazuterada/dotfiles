@@ -74,10 +74,7 @@ alias rebef='rebe foreman start --procfile=ProcfileDev'
 function pe { pyenv exec "$@"; }
 
 # start HTTP server
-alias pythonserver='python -m SimpleHTTPServer'
-alias web='pythonserver'
-alias http='pythonserver'
-alias server='pythonserver'
+alias http='python3 -m http.server'
 
 # pecoを使ってプロセス名から選んでシグナルを送る
 alias psint='ps -ax | peco | xargs kill -2' # 割り込み（Ctrl+Cと同じ）
