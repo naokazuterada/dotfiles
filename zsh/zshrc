@@ -61,10 +61,6 @@ alias gitignore='gibo'
 alias st='stree' # SourceTree
 alias v='vagrant'
 
-# phpenv
-export PATH="/Users/terada/.phpenv/bin:$PATH"
-eval "$(phpenv init -)"
-
 # rbenvを使った環境用
 function re   { rbenv exec "$@"; }
 function reb  { rbenv exec bundle "$@"; }
