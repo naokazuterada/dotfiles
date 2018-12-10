@@ -22,7 +22,7 @@ for cmmnd in "${cmmnds[@]}"; do
 done
 
 # cd XXX
-alias c='cd ~/Dropbox/AppSync/Chrome'
+alias c='cd ~/Karappo Inc. Dropbox/Terada Naokazu/AppSync/Chrome'
 alias d='cd ~/Desktop'
 alias s='cd ~/Sites'
 alias dotfiles='cd ~/.dotfiles'
