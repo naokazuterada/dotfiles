@@ -54,6 +54,19 @@ if ! type jq >/dev/null 2>&1; then
   brew install jq
 fi
 
+if ! type wp >/dev/null 2>&1; then
+  info "Install wp-cli"
+  curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
+  chmod +x wp-cli.phar
+  sudo mv wp-cli.phar /usr/local/bin/wp
+
+  info "Enable wp-cli tab completions"
+  curl -O https://raw.githubusercontent.com/wp-cli/wp-cli/v1.5.1/utils/wp-completion.bash
+  chmod +x wp-completion.bash
+  mkdir ~/bin
+  mkdir ~/bin/wp-cli
+  sudo mv wp-completion.bash ~/bin/wp-cli/wp-completion.bash
+fi
 if ! type subl >/dev/null 2>&1; then
   info "Link Sublime Text 3"
   ln -s "/Applications/Sublime Text.app/Contents/SharedSupport/bin/subl" /usr/local/bin/subl
