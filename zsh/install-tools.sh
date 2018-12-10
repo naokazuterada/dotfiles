@@ -59,7 +59,17 @@ if ! type subl >/dev/null 2>&1; then
   ln -s "/Applications/Sublime Text.app/Contents/SharedSupport/bin/subl" /usr/local/bin/subl
 fi
 
-if ! type ndenv >/dev/null 2>&1; then
-  info "Install ndenv"
-  brew install ndenv
+# anyenv =============
+if ! type anyenv >/dev/null 2>&1; then
+  info "Install anyenv"
+  git clone https://github.com/riywo/anyenv ~/.anyenv
+  # These lines are already written in zshrc
+  # echo 'export PATH="$HOME/.anyenv/bin:$PATH"' >> ~/.your_profile
+  # echo 'eval "$(anyenv init -)"' >> ~/.your_profile
+  exec $SHELL -l
+  echo ":::Please restart shel and execute following commands..."
+  echo "anyenv install ndenv"
+  echo "anyenv install phpenv"
+  echo "anyenv install rbenv"
 fi
+# /anyenv =============

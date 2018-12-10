@@ -119,13 +119,13 @@ export PATH=$PATH:./node_modules/.bin # for npm
 export PATH=/usr/local/share/npm/bin:$PATH
 
 # for ndenv->
-export PATH=$PATH:$HOME/.ndenv/bin
-eval "$(ndenv init -)"
+#export PATH=$PATH:$HOME/.ndenv/bin
+#eval "$(ndenv init -)"
 # <-for ndenv
 
 # for anyenv->
-#export PATH="$HOME/.anyenv/bin:$PATH"
-#eval "$(anyenv init -)"
+export PATH="$HOME/.anyenv/bin:$PATH"
+eval "$(anyenv init -)"
 # <-for anyenv
 
 # for Go-Lang
@@ -180,6 +180,12 @@ source /Users/terada/bin/wp-cli/wp-completion.bash
 test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell_integration.zsh"
 
 # ntfy
+# コマンド終了をSlackへ通知するツール
+# Usage:
+# sh some_task.sh; ntfy send "Finished"
+# or
+# pstree -p # find PID
+# while kill -0 <PID> 2> /dev/null; do sleep 1; done; ntfy send "Finished"
 eval "$(ntfy shell-integration)"
 
 # The next line updates PATH for the Google Cloud SDK.
