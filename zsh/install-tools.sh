@@ -53,3 +53,8 @@ if ! type jq >/dev/null 2>&1; then
   info "Install jq"
   brew install jq
 fi
+
+if ! type ndenv >/dev/null 2>&1; then
+  info "Install ndenv"
+  brew install ndenv
+fi
