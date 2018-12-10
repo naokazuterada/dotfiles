@@ -59,9 +59,18 @@ namespace :zsh do
   end
 end
 
+namespace :pip do
+  desc "Create symbolic link to HOME/.pip/pip.conf"
+  task :link do
+    files  =  Dir.glob("pip" +  "/*").map{|path| File.basename(path)}
+    FileUtils.mkdir_p(File.join(HOME, ".pip"))
+    symlink_ File.join(PWD, "pip", "pip.conf"), File.join(HOME, ".pip", "pip.conf")
+  end
+end
+
 namespace :etc do
   task :link do
-    etcs  =  Dir.glob("etc" +  "/*").map{|path| File.basename(path)}
-    same_name_symlinks File.join(PWD, "etc"), etcs
+    files  =  Dir.glob("etc" +  "/*").map{|path| File.basename(path)}
+    same_name_symlinks File.join(PWD, "etc"), files
   end
 end

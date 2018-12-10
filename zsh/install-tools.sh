@@ -77,7 +77,8 @@ fi
 # while kill -0 <PID> 2> /dev/null; do sleep 1; done; ntfy send "Finished"
 if ! type ntfy >/dev/null 2>&1; then
   info "Install ntfy"
-  sudo pip install ntfy
+  brew install openssl
+  pip install ntfy
 fi
 
 if ! type subl >/dev/null 2>&1; then
