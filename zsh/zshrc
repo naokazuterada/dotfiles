@@ -22,7 +22,7 @@ for cmmnd in "${cmmnds[@]}"; do
 done
 
 # cd XXX
-alias c='cd ~/Dropbox/AppSync/Chrome'
+alias c='cd ~/Karappo Inc. Dropbox/Terada Naokazu/AppSync/Chrome'
 alias d='cd ~/Desktop'
 alias s='cd ~/Sites'
 alias dotfiles='cd ~/.dotfiles'
@@ -78,10 +78,7 @@ eval "$(pyenv init -)"
 function pe { pyenv exec "$@"; }
 
 # start HTTP server
-alias pythonserver='python -m SimpleHTTPServer'
-alias web='pythonserver'
-alias http='pythonserver'
-alias server='pythonserver'
+alias http='python3 -m http.server'
 
 # pecoを使ってプロセス名から選んでシグナルを送る
 alias psint='ps -ax | peco | xargs kill -2' # 割り込み（Ctrl+Cと同じ）
@@ -98,6 +95,9 @@ alias middleman_template='git clone --recursive https://github.com/naokazuterada
 # iMac27-late2015 でExcelが重くなりやすいので、その際簡単にキャッシュを削除する
 # 参考: https://getpocket.com/a/read/1262698222
 alias excel_cleanup='rm -rf ~/Library/Preferences/com.microsoft.Excel.plist ~/Library/Preferences/com.microsoft.office.plist ~/Library/Caches/Microsoft ~/Library/Caches/Microsoft\ Office'
+
+# PHP
+alias composer="php ~/composer.phar"
 
 # お遊び系
 alias matrix='cmatrix'
@@ -116,9 +116,16 @@ export PATH=$PATH:/usr/local/heroku/bin ### Added by the Heroku Toolbelt
 export PATH=$PATH:$HOME/.dotfiles/functions
 export PATH=$PATH:./vendor/bin:./bin # for bundler
 export PATH=$PATH:./node_modules/.bin # for npm
+export PATH=/usr/local/share/npm/bin:$PATH
+
+# for ndenv->
+export PATH=$PATH:$HOME/.ndenv/bin
+eval "$(ndenv init -)"
+# <-for ndenv
+
 # for anyenv->
-export PATH="$HOME/.anyenv/bin:$PATH"
-eval "$(anyenv init -)"
+#export PATH="$HOME/.anyenv/bin:$PATH"
+#eval "$(anyenv init -)"
 # <-for anyenv
 
 # for Go-Lang
@@ -136,8 +143,8 @@ export FDK_EXE=$HOME/bin/FDK/Tools/osx
 # Node Completion - Auto-generated, do not touch.
 #shopt -s progcomp
 #for f in $(command ls ~/.node-completion); do
-# f="$HOME/.node-completion/$f"
-# test -f "$f" && . "$f"
+#  f="$HOME/.node-completion/$f"
+#  test -f "$f" && . "$f"
 #done
 
 # for rbenv and phpenv
@@ -170,6 +177,10 @@ source /Users/terada/bin/wp-cli/wp-completion.bash
 
 # ssh
 # export SSH_KEY_PATH="~/.ssh/dsa_id"
+test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell_integration.zsh"
+
+# ntfy
+eval "$(ntfy shell-integration)"
 
 # The next line updates PATH for the Google Cloud SDK.
 if [ -f '/Users/terada/google-cloud-sdk/path.zsh.inc' ]; then . '/Users/terada/google-cloud-sdk/path.zsh.inc'; fi

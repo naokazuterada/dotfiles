@@ -1,0 +1,6 @@
+---
+backends:
+  - slack
+slack:
+  token: xoxp-249440278914-250327066630-447127200790-5ca104e5ea3975c97c3bbfad852d4e57
+  recipient: "#builds-karappo"

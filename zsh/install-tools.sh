@@ -58,3 +58,8 @@ if ! type subl >/dev/null 2>&1; then
   info "Link Sublime Text 3"
   ln -s "/Applications/Sublime Text.app/Contents/SharedSupport/bin/subl" /usr/local/bin/subl
 fi
+
+if ! type ndenv >/dev/null 2>&1; then
+  info "Install ndenv"
+  brew install ndenv
+fi
