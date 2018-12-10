@@ -33,6 +33,11 @@ if ! type wget >/dev/null 2>&1; then
   brew install wget
 fi
 
+if ! type brew >/dev/null 2>&1; then
+  info "Install homebrew"
+  ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+fi
+
 if ! type gibo >/dev/null 2>&1; then
   info "Install gibo"
   brew install gibo
