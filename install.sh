@@ -27,5 +27,8 @@ info "Install zsh tools"
 info "Link Sublime Text"
 ln -s "/Applications/Sublime Text.app/Contents/SharedSupport/bin/subl" /usr/local/bin/
 
+info "Link Sublime Text - User Packages"
+ln -s "/Users/terada/Karappo Inc. Dropbox/Terada Naokazu/AppSync/Sublime Text 3/Packages/User" "~/Library/Application Support/Sublime Text 3/Packages/User"
+
 info "Link SourceTree"
 ln -s /Applications/SourceTree.app/Contents/Resources/stree /usr/local/bin/
