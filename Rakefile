@@ -19,6 +19,7 @@ cleans = [
           ".gemrc",
           ".gitconfig",
           ".gitignore_global",
+          ".ntfy.yml",
           ".rspec",
           ".tigrc",
           ".zpreztorc",

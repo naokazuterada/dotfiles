@@ -67,6 +67,19 @@ if ! type wp >/dev/null 2>&1; then
   mkdir ~/bin/wp-cli
   sudo mv wp-completion.bash ~/bin/wp-cli/wp-completion.bash
 fi
+
+# ntfy
+# コマンド終了をSlackへ通知するツール
+# Usage:
+# sh some_task.sh; ntfy send "Finished"
+# or
+# pstree -p # find PID
+# while kill -0 <PID> 2> /dev/null; do sleep 1; done; ntfy send "Finished"
+if ! type ntfy >/dev/null 2>&1; then
+  info "Install ntfy"
+  sudo pip install ntfy
+fi
+
 if ! type subl >/dev/null 2>&1; then
   info "Link Sublime Text 3"
   ln -s "/Applications/Sublime Text.app/Contents/SharedSupport/bin/subl" /usr/local/bin/subl
@@ -83,6 +96,7 @@ if ! type anyenv >/dev/null 2>&1; then
   echo ":::Please restart shel and execute following commands..."
   echo "anyenv install ndenv"
   echo "anyenv install phpenv"
+  echo "anyenv install pyenv"
   echo "anyenv install rbenv"
 fi
 # /anyenv =============
