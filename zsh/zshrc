@@ -123,8 +123,8 @@ export CPPFLAGS="-I/usr/local/opt/libxml2/include"
 export PKG_CONFIG_PATH="/usr/local/opt/libxml2/lib/pkgconfig"
 
 # for ndenv->
-#export PATH=$PATH:$HOME/.ndenv/bin
-#eval "$(ndenv init -)"
+export PATH=$PATH:$HOME/.ndenv/bin
+eval "$(ndenv init -)"
 # <-for ndenv
 
 # for anyenv->
