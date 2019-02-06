@@ -117,6 +117,10 @@ export PATH=$PATH:$HOME/.dotfiles/functions
 export PATH=$PATH:./vendor/bin:./bin # for bundler
 export PATH=$PATH:./node_modules/.bin # for npm
 export PATH=/usr/local/share/npm/bin:$PATH
+export PATH="/usr/local/opt/libxml2/bin:$PATH"
+export LDFLAGS="-L/usr/local/opt/libxml2/lib"
+export CPPFLAGS="-I/usr/local/opt/libxml2/include"
+export PKG_CONFIG_PATH="/usr/local/opt/libxml2/lib/pkgconfig"
 
 # for ndenv->
 #export PATH=$PATH:$HOME/.ndenv/bin
