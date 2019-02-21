@@ -48,7 +48,8 @@ alias m_new='middleman_new'
 
 # NPM
 alias n='npm'
-alias nu='npx ncu -u' # Updating packages with 'node-check-updates'
+# Updating packages with 'node-check-updates'
+alias ncu='npx npm-check -u'
 # Pecoを使ってnpm scriptsをリスト化
 alias nr='npm run $(commands | peco)'
 function commands () {
