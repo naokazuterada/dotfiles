@@ -39,6 +39,9 @@ alias os='open ~/Sites'
 # make file `.htpasswd` in current dir with MD5 hash
 alias htpasswd='htpasswd -cbm .htpasswd'
 
+# Local IP address
+alias ip='ipconfig getifaddr en1'
+
 alias o='source ~/.dotfiles/functions/open_with_sublime_sourcetree.sh'
 alias a='source ~/.dotfiles/functions/open_with_atom_sourcetree.sh'
 alias mkcd='source ~/.dotfiles/functions/mkdir_cd.sh'
