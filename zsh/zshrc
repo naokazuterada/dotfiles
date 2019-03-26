@@ -40,7 +40,7 @@ alias os='open ~/Sites'
 alias htpasswd='htpasswd -cbm .htpasswd'
 
 # Local IP address
-alias ip='ipconfig getifaddr en1'
+alias ip='ipconfig getifaddr en0'
 
 alias o='source ~/.dotfiles/functions/open_with_sublime_sourcetree.sh'
 alias a='source ~/.dotfiles/functions/open_with_atom_sourcetree.sh'
