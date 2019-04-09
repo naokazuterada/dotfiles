@@ -78,6 +78,11 @@ if ! type subl >/dev/null 2>&1; then
   ln -s "/Applications/Sublime Text.app/Contents/SharedSupport/bin/subl" /usr/local/bin/subl
 fi
 
+if ! type nkf >/dev/null 2>&1; then
+  info "Install nkf"
+  brew install nkf
+fi
+
 # anyenv =============
 if ! type anyenv >/dev/null 2>&1; then
   info "Install anyenv"
