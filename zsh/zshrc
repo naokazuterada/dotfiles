@@ -41,7 +41,7 @@ alias htpasswd='htpasswd -cbm .htpasswd'
 
 # Local IP address
 # WiFiとEthernetでIPが違うので、どちらでも大丈夫なようリストから選択式
-alias ip2='networksetup -listallhardwareports | peco | perl -pe "s/Device: (en[0-9]+)/\1/g;" | xargs ipconfig getifaddr'
+alias ip='networksetup -listallhardwareports | peco | perl -pe "s/Device: (en[0-9]+)/\1/g;" | xargs ipconfig getifaddr'
 
 alias o='source ~/.dotfiles/functions/open_with_sublime_sourcetree.sh'
 alias a='source ~/.dotfiles/functions/open_with_atom_sourcetree.sh'
