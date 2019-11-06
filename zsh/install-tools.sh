@@ -83,6 +83,11 @@ if ! type nkf >/dev/null 2>&1; then
   brew install nkf
 fi
 
+if ! type awscli >/dev/null 2>&1; then
+  info "Install awscli"
+  brew install awscli
+fi
+
 # anyenv =============
 if ! type anyenv >/dev/null 2>&1; then
   info "Install anyenv"
