@@ -97,7 +97,7 @@ if ! type anyenv >/dev/null 2>&1; then
   # echo 'eval "$(anyenv init -)"' >> ~/.your_profile
   exec $SHELL -l
   echo ":::Please restart shel and execute following commands..."
-  echo "anyenv install ndenv"
+  echo "anyenv install nodenv"
   echo "anyenv install phpenv"
   echo "anyenv install pyenv"
   echo "anyenv install rbenv"
