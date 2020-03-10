@@ -90,6 +90,9 @@ alias psint='ps -ax | peco | xargs kill -2' # 割り込み（Ctrl+Cと同じ）
 alias psquit='ps -ax | peco | xargs kill -3' # 終了
 alias pskill='ps -ax | peco | xargs kill -9' # 強制終了
 alias psterm='ps -ax | peco | xargs kill -15' # 終了
+# 使用しているportで探してkill
+ptkill() { lsof -i tcp:$1 | awk 'NR!=1 {print $2}' | xargs kill ; }
+portkill() { ptkill $1; }
 
 # SSHの公開鍵を素早くコピー、サーバーへログインしてauthorized_keysにペースト
 alias copy-rsa='cat ~/.ssh/id_rsa.pub | pbcopy'
