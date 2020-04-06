@@ -51,11 +51,10 @@ alias m='middleman'
 alias m_new='middleman_new'
 
 # NPM
-alias n='npm'
 # Updating packages with 'node-check-updates'
 alias ncu='npx npm-check -u'
 # Pecoを使ってnpm scriptsをリスト化
-alias nr='npm run $(commands | peco)'
+alias npmrun='npm run $(commands | peco)'
 function commands () {
   cat package.json | jq -r '.scripts | keys[]'
 }
