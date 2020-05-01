@@ -84,6 +84,13 @@ function pe { pyenv exec "$@"; }
 # start HTTP server
 alias http='python3 -m http.server'
 
+# Clear DNS cache
+alias clearDNS='sudo killall -HUP mDNSResponder'
+
+# Chrome log
+# https://support.google.com/chrome/a/answer/6271282?hl=en
+alias chrome_log='/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --enable-logging=stderr --v=1'
+
 # pecoを使ってプロセス名から選んでシグナルを送る
 alias intps='ps -ax | peco | xargs kill -2' # 割り込み（Ctrl+Cと同じ）
 alias quitps='ps -ax | peco | xargs kill -3' # 終了
