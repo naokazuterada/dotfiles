@@ -6,6 +6,7 @@
   editor = vi
   quotepath = false
 	excludesfile = /Users/terada/.gitignore_global
+	ignorecase = false
 
 [color]
   ui = true

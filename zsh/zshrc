@@ -84,6 +84,10 @@ function pe { pyenv exec "$@"; }
 # start HTTP server
 alias http='python3 -m http.server'
 
+# Determining my public IP
+# Ref: https://www.cyberciti.biz/faq/how-to-find-my-public-ip-address-from-command-line-on-a-linux/
+alias myip='dig +short myip.opendns.com @resolver1.opendns.com'
+
 # Clear DNS cache
 alias clearDNS='sudo killall -HUP mDNSResponder'
 
@@ -132,8 +136,9 @@ export PATH=$PATH:./vendor/bin:./bin # for bundler
 export PATH=$PATH:./node_modules/.bin # for npm
 export PATH=$PATH:$HOME/pear/bin/
 export PATH=/usr/local/share/npm/bin:$PATH
-export PATH="/usr/local/opt/libxml2/bin:$PATH"
-export PATH="/usr/local/opt/openssl/bin:$PATH"
+export PATH=/usr/local/opt/libxml2/bin:$PATH
+export PATH=/usr/local/opt/openssl/bin:$PATH
+export PATH=~/bin/LAStools-master/bin:$PATH
 export LDFLAGS="-L/usr/local/opt/libxml2/lib"
 export CPPFLAGS="-I/usr/local/opt/libxml2/include"
 export PKG_CONFIG_PATH="/usr/local/opt/libxml2/lib/pkgconfig"
