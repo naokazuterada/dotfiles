@@ -109,11 +109,15 @@ alias copy-rsa='cat ~/.ssh/id_rsa.pub | pbcopy'
 
 # サブディレクトリを含めてファイルサイズ順に並べる
 # Ref: https://unix.stackexchange.com/questions/88065/sorting-files-according-to-size-recursively
+# ※ 出力が大きくなるのでheadやtailを使うこと
 # ファイルのみ
+# Usage:
+# list-file-size | head -5
 alias list-file-size='find . -type f -exec du -ah {} + | grep -v "/$" | sort -rh'
 # ディレクトリも含めたい場合
+# Usage:
+# list-file-dir-size | head -5
 alias list-file-dir-size='du -ah . | grep -v "/$" | sort -rh'
-# 出力が大きくなるのでheadやtailを使うこと→ file-size | head -5
 
 # middleman-templateをclone
 alias middleman_template='git clone --recursive https://github.com/naokazuterada/middleman-template.git'
