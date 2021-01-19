@@ -107,6 +107,14 @@ killport() { killpt $1; }
 # SSHの公開鍵を素早くコピー、サーバーへログインしてauthorized_keysにペースト
 alias copy-rsa='cat ~/.ssh/id_rsa.pub | pbcopy'
 
+# サブディレクトリを含めてファイルサイズ順に並べる
+# Ref: https://unix.stackexchange.com/questions/88065/sorting-files-according-to-size-recursively
+# ファイルのみ
+alias list-file-size='find . -type f -exec du -ah {} + | grep -v "/$" | sort -rh'
+# ディレクトリも含めたい場合
+alias list-file-dir-size='du -ah . | grep -v "/$" | sort -rh'
+# 出力が大きくなるのでheadやtailを使うこと→ file-size | head -5
+
 # middleman-templateをclone
 alias middleman_template='git clone --recursive https://github.com/naokazuterada/middleman-template.git'
 
