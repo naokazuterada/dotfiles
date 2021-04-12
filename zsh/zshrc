@@ -132,6 +132,10 @@ alias composer="php ~/composer.phar"
 # お遊び系
 alias matrix='cmatrix'
 
+# HEICファイルをjpgに変換
+# Usage: heic2jpg /path/to/file.HEIC
+function heic2jpg { sips --setProperty format jpeg "$@" --out "$@".jpg; }
+
 # export PATH="/Users/terada/.rbenv/shims:/Users/terada/.rbenv/shims:/Users/terada/Qt/5.1.0/clang_64/bin:/Applications/SenchaSDKTools-2.0.0-beta3:/Applications/SenchaSDKTools-2.0.0-Beta/jsbuilder:/Applications/SenchaSDKTools-2.0.0-Beta/bin:/Applications/SenchaSDKTools-2.0.0-Beta:/usr/local/git/bin:/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin:/opt/X11/bin:/usr/local/bin:/opt/local/bin:/opt/local/sbin:/opt/local/lib/postgresql91/bin:/Applications/SenchaSDKTools-2.0.0-Beta:/bin:/Applications/SenchaSDKTools-2.0.0-Beta/bin:/Applications/SenchaSDKTools-2.0.0-Beta/jsbuilder:/Applications/SenchaSDKTools-2.0.0-beta3:/Users/terada/bin:/Users/terada/ratproxy:/usr/local/Cellar/android-sdk/20130219/tools:/usr/local/Cellar/android-sdk/20130219/platform-tools:/Users/terada/bin/repo:/usr/local/share/npm/bin"
 export PATH=$PATH:/Applications/SenchaSDKTools-2.0.0-Beta
 export PATH=$PATH:/Applications/SenchaSDKTools-2.0.0-Beta/bin
