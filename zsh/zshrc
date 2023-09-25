@@ -29,6 +29,7 @@ alias dotfiles='cd ~/.dotfiles'
 alias dotfile='dotfiles'
 alias dot='dotfiles'
 alias ops='cd ~/Documents/ops'
+alias wp-themes='cd ./wp/wp-content/themes'
 
 # open XXX
 alias od='open ~/Desktop'
