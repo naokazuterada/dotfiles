@@ -5,8 +5,7 @@ Your dotfiles are how you personalize your system. These are mine.
 
 ## Install
 
-Install homebrew
-https://docs.brew.sh/Installation
+Install [homebrew](https://brew.sh/)
 
 ```bash
 git clone https://github.com/naokazuterada/dotfiles ~/.dotfiles
