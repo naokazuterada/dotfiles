@@ -6,6 +6,11 @@ Your dotfiles are how you personalize your system. These are mine.
 ## Install
 
 Install [homebrew](https://brew.sh/)
+```bash
+brew help
+```
+
+If it's OK then run these commands.
 
 ```bash
 git clone https://github.com/naokazuterada/dotfiles ~/.dotfiles
