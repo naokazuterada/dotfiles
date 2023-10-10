@@ -63,7 +63,7 @@ function commands () {
 alias f='foreman'
 alias g='git'
 alias gitignore='gibo'
-alias st='stree' # SourceTree
+alias st='open -a SourceTree'
 alias v='vagrant'
 
 # rbenvを使った環境用
@@ -157,7 +157,7 @@ export PATH=/usr/local/share/npm/bin:$PATH
 export PATH=/usr/local/opt/libxml2/bin:$PATH
 export PATH=/usr/local/opt/openssl/bin:$PATH
 export PATH=~/bin/LAStools-master/bin:$PATH
-export PATH=/Applications/MAMP/bin/php/php7.4.21/bin:$PATH
+export PATH=/Applications/MAMP/bin/php/php7.4.33/bin:$PATH
 export LDFLAGS="-L/usr/local/opt/libxml2/lib"
 export CPPFLAGS="-I/usr/local/opt/libxml2/include"
 export PKG_CONFIG_PATH="/usr/local/opt/libxml2/lib/pkgconfig"
