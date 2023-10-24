@@ -5,12 +5,17 @@ Your dotfiles are how you personalize your system. These are mine.
 
 ## Install
 
-Run this:
+Install [homebrew](https://brew.sh/)
+```bash
+brew help
+```
+
+If it's OK then run these commands.
 
 ```bash
-$ git clone https://github.com/naokazuterada/dotfiles ~/.dotfiles
-$ cd ~/.dotfiles
-$ ./install.sh
+git clone https://github.com/naokazuterada/dotfiles ~/.dotfiles
+cd ~/.dotfiles
+./install.sh
 ```
 
 This script will install oh-my-zsh. And every dotfiles are linked to `$HOME` directory. 
