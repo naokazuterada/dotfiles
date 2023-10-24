@@ -75,6 +75,8 @@ alias rebi='reb install --path=vendor/bundle --binstubs=vendor/bin'
 alias rebem='rebe middleman'
 alias rebef='rebe foreman start --procfile=ProcfileDev'
 
+export RUBY_CFLAGS="-Wno-error=implicit-function-declaration"
+
 # for pyenv
 export PYENV_ROOT=$HOME/.pyenv
 export PATH=$PYENV_ROOT/bin:$PATH
