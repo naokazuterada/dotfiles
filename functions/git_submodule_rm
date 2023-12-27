@@ -1,0 +1,17 @@
+
+#!/bin/sh
+# --------------------------------------
+# Goal:
+#   Git submodule の完全な削除
+# --------------------------------------
+
+submodule_path=$1
+
+if [ -z $submodule_path ]; then
+  echo "usage: git_submodule_rm [submodule_path]"
+  echo "[submodule_path]を指定して下さい"
+else
+  git submodule deinit -f $submodule_path
+  git rm -f $submodule_path
+  rm -rf .git/modules/$submodule_path
+fi
