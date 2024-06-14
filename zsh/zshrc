@@ -241,3 +241,4 @@ export PATH=~/.local/bin:$PATH
 
 # added by travis gem
 [ -f /Users/terada/.travis/travis.sh ] && source /Users/terada/.travis/travis.sh
+export PATH="/opt/homebrew/opt/llvm/bin:$PATH"
