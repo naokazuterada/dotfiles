@@ -127,20 +127,10 @@ alias composer="php ~/composer.phar"
 function heic2jpg { sips --setProperty format jpeg "$@" --out "$@".jpg; }
 
 export PATH=$PATH:$HOME/bin
-export PATH=$PATH:$HOME/bin/FDK/Tools/osx
-export PATH=$PATH:$HOME/Qt/5.1.0/clang_64/bin
-export PATH=$PATH:$HOME/Qt5.1.0/5.1.0/clang_64/bin
 export PATH=$PATH:$HOME/.rbenv/bin
-export PATH=$PATH:/usr/local/heroku/bin ### Added by the Heroku Toolbelt
 export PATH=$PATH:$HOME/.dotfiles/functions
 export PATH=$PATH:./vendor/bin:./bin # for bundler
 export PATH=$PATH:./node_modules/.bin # for npm
-export PATH=$PATH:$HOME/pear/bin/
-# export PATH=$PATH:`npm bin -g`
-export PATH=/usr/local/share/npm/bin:$PATH
-export PATH=/usr/local/opt/libxml2/bin:$PATH
-export PATH=/usr/local/opt/openssl/bin:$PATH
-export PATH=~/bin/LAStools-master/bin:$PATH
 export PATH=/Applications/MAMP/bin/php/php7.4.33/bin:$PATH
 export PATH=/opt/homebrew/bin:$PATH
 
