@@ -142,6 +142,7 @@ export PATH=/usr/local/opt/libxml2/bin:$PATH
 export PATH=/usr/local/opt/openssl/bin:$PATH
 export PATH=~/bin/LAStools-master/bin:$PATH
 export PATH=/Applications/MAMP/bin/php/php7.4.33/bin:$PATH
+export PATH=/opt/homebrew/bin:$PATH
 
 # for anyenv->
 export PATH="$HOME/.anyenv/bin:$PATH"
