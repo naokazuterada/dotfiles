@@ -119,9 +119,6 @@ alias middleman_template='git clone --recursive https://github.com/naokazuterada
 # 参考: https://getpocket.com/a/read/1262698222
 alias excel_cleanup='rm -rf ~/Library/Preferences/com.microsoft.Excel.plist ~/Library/Preferences/com.microsoft.office.plist ~/Library/Caches/Microsoft ~/Library/Caches/Microsoft\ Office'
 
-# PHP
-alias composer="php ~/composer.phar"
-
 # HEICファイルをjpgに変換
 # Usage: heic2jpg /path/to/file.HEIC
 function heic2jpg { sips --setProperty format jpeg "$@" --out "$@".jpg; }
@@ -150,9 +147,6 @@ function pe { pyenv exec "$@"; }
 alias http='python3 -m http.server'
 
 # for rbenv and phpenv
-# export RBENV_ROOT=/usr/local/var/rbenv <= 邪魔になるのでいらない。
-export PHPENV_ROOT=$HOME/.phpenv
-export PATH="$PATH:$PHPENV_ROOT/bin"
 eval "$(rbenv init -)"
 eval "$(phpenv init -)"
 
