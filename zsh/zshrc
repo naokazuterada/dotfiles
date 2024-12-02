@@ -128,7 +128,7 @@ export PATH=$PATH:$HOME/.rbenv/bin
 export PATH=$PATH:$HOME/.dotfiles/functions
 export PATH=$PATH:./vendor/bin:./bin # for bundler
 export PATH=$PATH:./node_modules/.bin # for npm
-export PATH=/Applications/MAMP/bin/php/php7.4.33/bin:$PATH
+export PATH=/Applications/MAMP/bin/php/php8.3.0/bin:$PATH
 export PATH=/opt/homebrew/bin:$PATH
 
 # for anyenv->
