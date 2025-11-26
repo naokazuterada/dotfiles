@@ -154,7 +154,7 @@ eval "$(phpenv init -)"
 # http://wp-cli.org/
 autoload bashcompinit
 bashcompinit
-source /Users/terada/bin/wp-cli/wp-completion.bash
+source $HOME/bin/wp-cli/wp-completion.bash
 export PATH=$PATH:/Applications/MAMP/Library/bin/
 #export MANPATH="/usr/local/man:$MANPATH"
 
@@ -176,12 +176,12 @@ export PATH=$PATH:/Applications/MAMP/Library/bin/
 test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell_integration.zsh"
 
 # heroku autocomplete setup
-HEROKU_AC_ZSH_SETUP_PATH=/Users/terada/Library/Caches/heroku/autocomplete/zsh_setup && test -f $HEROKU_AC_ZSH_SETUP_PATH && source $HEROKU_AC_ZSH_SETUP_PATH;
+HEROKU_AC_ZSH_SETUP_PATH=$HOME/Library/Caches/heroku/autocomplete/zsh_setup && test -f $HEROKU_AC_ZSH_SETUP_PATH && source $HEROKU_AC_ZSH_SETUP_PATH;
 export PATH="$HOME/.yarn/bin:$HOME/.config/yarn/global/node_modules/.bin:$PATH"
 
 # for AWS CLI
 export PATH=~/.local/bin:$PATH
 
 # added by travis gem
-[ -f /Users/terada/.travis/travis.sh ] && source /Users/terada/.travis/travis.sh
+[ -f $HOME/.travis/travis.sh ] && source $HOME/.travis/travis.sh
 export PATH="/opt/homebrew/opt/llvm/bin:$PATH"
