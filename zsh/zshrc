@@ -121,7 +121,7 @@ alias excel_cleanup='rm -rf ~/Library/Preferences/com.microsoft.Excel.plist ~/Li
 
 # HEICファイルをjpgに変換
 # Usage: heic2jpg /path/to/file.HEIC
-function heic2jpg { sips --setProperty format jpeg "$@" --out "$@".jpg; }
+function heic2jpg { sips --setProperty format jpeg "$1" --out "${1:r}.jpg"; }
 
 export PATH=$PATH:$HOME/bin
 export PATH=$PATH:$HOME/.rbenv/bin
