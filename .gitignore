@@ -11,3 +11,4 @@ atom/compile-cache
 .DS_Store
 vendor/*
 .bundle/*
+.claude/*
