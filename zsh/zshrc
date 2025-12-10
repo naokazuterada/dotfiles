@@ -128,15 +128,17 @@ alias excel_cleanup='rm -rf ~/Library/Preferences/com.microsoft.Excel.plist ~/Li
 #   heic2jpg /path/to/file.HEIC
 #   heic2jpg /path/to/directory
 function heic2jpg {
+  # 単一ファイルの変換処理
+  local _convert() { sips --setProperty format jpeg "$1" --out "${1:r}.jpg" }
+
   if [[ -d "$1" ]]; then
     # ディレクトリの場合: サブディレクトリ含め全てのHEICファイルを変換
     # (N): 該当ファイルがなくてもエラーを出さない (null glob)
     for f in "$1"/**/*.(heic|HEIC)(N); do
-      sips --setProperty format jpeg "$f" --out "${f:r}.jpg"
+      _convert "$f"
     done
   else
-    # ファイルの場合: 単一ファイルを変換
-    sips --setProperty format jpeg "$1" --out "${1:r}.jpg"
+    _convert "$1"
   fi
 }
 
