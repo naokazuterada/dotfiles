@@ -122,8 +122,23 @@ alias middleman_template='git clone --recursive https://github.com/naokazuterada
 alias excel_cleanup='rm -rf ~/Library/Preferences/com.microsoft.Excel.plist ~/Library/Preferences/com.microsoft.office.plist ~/Library/Caches/Microsoft ~/Library/Caches/Microsoft\ Office'
 
 # HEICファイルをjpgに変換
-# Usage: heic2jpg /path/to/file.HEIC
-function heic2jpg { sips --setProperty format jpeg "$1" --out "${1:r}.jpg"; }
+# - ファイルを指定した場合: そのファイルをJPGに変換
+# - ディレクトリを指定した場合: 配下の全HEIC/heicファイルを再帰的にJPGに変換
+# Usage:
+#   heic2jpg /path/to/file.HEIC
+#   heic2jpg /path/to/directory
+function heic2jpg {
+  if [[ -d "$1" ]]; then
+    # ディレクトリの場合: サブディレクトリ含め全てのHEICファイルを変換
+    # (N): 該当ファイルがなくてもエラーを出さない (null glob)
+    for f in "$1"/**/*.(heic|HEIC)(N); do
+      sips --setProperty format jpeg "$f" --out "${f:r}.jpg"
+    done
+  else
+    # ファイルの場合: 単一ファイルを変換
+    sips --setProperty format jpeg "$1" --out "${1:r}.jpg"
+  fi
+}
 
 # ====================
 # PATH settings
