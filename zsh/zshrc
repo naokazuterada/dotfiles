@@ -124,12 +124,30 @@ alias excel_cleanup='rm -rf ~/Library/Preferences/com.microsoft.Excel.plist ~/Li
 # HEICファイルをjpgに変換
 # - ファイルを指定した場合: そのファイルをJPGに変換
 # - ディレクトリを指定した場合: 配下の全HEIC/heicファイルを再帰的にJPGに変換
+# - 変換後、元のHEICファイルを削除するか確認
 # Usage:
 #   heic2jpg /path/to/file.HEIC
 #   heic2jpg /path/to/directory
 function heic2jpg {
+  # 引数チェック
+  if [[ -z "$1" ]]; then
+    echo "Usage: heic2jpg /path/to/file.HEIC または heic2jpg /path/to/directory"
+    return 1
+  fi
+
+  if [[ ! -e "$1" ]]; then
+    echo "エラー: $1 が見つかりません"
+    return 1
+  fi
+
+  local converted_files=()
+
   # 単一ファイルの変換処理
-  local _convert() { sips --setProperty format jpeg "$1" --out "${1:r}.jpg" }
+  local _convert() {
+    if sips --setProperty format jpeg "$1" --out "${1:r}.jpg" 2>/dev/null; then
+      converted_files+=("$1")
+    fi
+  }
 
   if [[ -d "$1" ]]; then
     # ディレクトリの場合: サブディレクトリ含め全てのHEICファイルを変換
@@ -138,7 +156,34 @@ function heic2jpg {
       _convert "$f"
     done
   else
-    _convert "$1"
+    # ファイルの場合: HEICファイルかチェック
+    if [[ "$1" =~ \.(heic|HEIC)$ ]]; then
+      _convert "$1"
+    else
+      echo "エラー: HEICファイルではありません: $1"
+      return 1
+    fi
+  fi
+
+  # 変換されたファイルがあれば削除するか確認
+  if [[ ${#converted_files[@]} -gt 0 ]]; then
+    echo ""
+    echo "===== 変換完了: ${#converted_files[@]}ファイル ====="
+    for f in "${converted_files[@]}"; do
+      echo "$f"
+    done
+    echo ""
+    echo -n "元のHEICファイルを削除しますか？ [y/N]: "
+    read answer
+    if [[ "$answer" =~ ^[Yy]$ ]]; then
+      for f in "${converted_files[@]}"; do
+        rm -f "$f"
+        echo "削除: $f"
+      done
+      echo "元のHEICファイルを削除しました"
+    else
+      echo "元のHEICファイルは保持されました"
+    fi
   fi
 }
 
