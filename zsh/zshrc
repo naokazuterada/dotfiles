@@ -271,8 +271,8 @@ function gw() {
   # メニュー項目の定義
   local ACTIONS=(
     "1. Switch : ワークツリーを切り替える"
-    "2. Add    : リモートブランチから作成"
-    "3. New    : 新規ブランチを作成して追加"
+    "2. New    : 新規ブランチを作成して追加"
+    "3. Add    : リモートブランチから作成"
     "4. Remove : ワークツリーを削除する"
   )
 
@@ -290,23 +290,25 @@ function gw() {
       [ -n "$selected" ] && cd "$selected"
       ;;
 
-    "2. Add"*)
-      local branch=$(git branch -r | fzf --height 40% --reverse --header "対象ブランチを選択")
-      [ -z "$branch" ] && return
-      local clean_branch=$(echo $branch | sed 's/origin\///' | tr -d ' ')
-      local dir_name=$(echo $clean_branch | sed 's/\//-/g')
-      local target_dir="../$(basename $(pwd)).$dir_name"
-      git worktree add "$target_dir" "$clean_branch" && cd "$target_dir"
-      ;;
-
-    "3. New"*)
+    "2. New"*)
       local branch_name="feature/"
       # プロンプト一体型で入力
       vared -p "新規ブランチ名を入力: " branch_name
       [ -z "$branch_name" ] && return
+      # ディレクトリ名用に / を - に置換
       local dir_name=$(echo $branch_name | sed 's/\//-/g')
       local target_dir="../$(basename $(pwd)).$dir_name"
       git worktree add -b "$branch_name" "$target_dir" && cd "$target_dir"
+      ;;
+
+    "3. Add"*)
+      local branch=$(git branch -r | fzf --height 40% --reverse --header "対象ブランチを選択")
+      [ -z "$branch" ] && return
+      local clean_branch=$(echo $branch | sed 's/origin\///' | tr -d ' ')
+      # ディレクトリ名用に / を - に置換
+      local dir_name=$(echo $clean_branch | sed 's/\//-/g')
+      local target_dir="../$(basename $(pwd)).$dir_name"
+      git worktree add "$target_dir" "$clean_branch" && cd "$target_dir"
       ;;
 
     "4. Remove"*)
