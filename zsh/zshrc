@@ -257,3 +257,71 @@ HEROKU_AC_ZSH_SETUP_PATH=$HOME/Library/Caches/heroku/autocomplete/zsh_setup && t
 
 # added by travis gem
 [ -f $HOME/.travis/travis.sh ] && source $HOME/.travis/travis.sh
+
+
+# ------------------------------------------------------------------
+# Git Worktree Helper (fzf based)
+# ------------------------------------------------------------------
+# gwc  : [Checkout] 既存のワークツリーをリストから選択して移動します。
+# gwa  : [Add]      リモートブランチを選択し、新しくワークツリーを作成します。
+# gwan : [Add New]  ブランチ名を新規入力し、空のワークツリーを作成します。
+# gwd  : [Delete]   ワークツリーをリストから選択して安全に削除します。
+#
+# ※ワークツリーは現在のリポジトリの「一つ上の階層」に作成されます。
+# ------------------------------------------------------------------
+
+# 1. ワークツリー切り替え (Switch)
+# 使い方: gwc (Git Worktree Checkout)
+function gwc() {
+  local selected=$(git worktree list | fzf --height 40% --reverse --header "Select Worktree" | awk '{print $1}')
+  if [ -n "$selected" ]; then
+    cd "$selected"
+  else
+    echo "No worktree selected."
+  fi
+}
+
+# 2. 既存のリモートブランチからワークツリー作成 (Add from Remote)
+# 使い方: gwa (Git Worktree Add)
+function gwa() {
+  local branch=$(git branch -r | fzf --height 40% --reverse --header "Select Remote Branch")
+  [ -z "$branch" ] && return
+
+  # origin/ などを削除
+  local clean_branch=$(echo $branch | sed 's/origin\///' | tr -d ' ')
+  # ディレクトリ名を作成 (親ディレクトリ名.ブランチ名)
+  local target_dir="../$(basename $(pwd)).$clean_branch"
+
+  echo "Adding worktree: $target_dir"
+  git worktree add "$target_dir" "$clean_branch" && cd "$target_dir"
+}
+
+# 3. 新規ブランチを作成してワークツリー作成 (Add New)
+# 使い方: gwan (Git Worktree Add New)
+function gwan() {
+  echo -n "New branch name: "
+  read branch_name
+  [ -z "$branch_name" ] && return
+
+  local target_dir="../$(basename $(pwd)).$branch_name"
+  git worktree add -b "$branch_name" "$target_dir" && cd "$target_dir"
+}
+
+# 4. ワークツリーの削除 (Remove)
+# 使い方: gwd (Git Worktree Delete)
+function gwd() {
+  local selected=$(git worktree list | fzf --height 40% --reverse --header "Select Worktree to REMOVE" | awk '{print $1}')
+  if [ -n "$selected" ]; then
+    # メインリポジトリを消さないようチェック
+    if [ "$selected" = "$(git rev-parse --show-toplevel)" ]; then
+      echo "Cannot remove the main working tree."
+      return
+    fi
+    echo -n "Remove $selected? (y/n): "
+    read opt
+    if [ "$opt" = "y" ]; then
+      git worktree remove "$selected"
+      echo "Removed."
+    fi
+  fi
+}
