@@ -264,6 +264,8 @@ HEROKU_AC_ZSH_SETUP_PATH=$HOME/Library/Caches/heroku/autocomplete/zsh_setup && t
 # ------------------------------------------------------------------
 # 使い方: gw
 # 説明: メニューから 参照・追加・新規作成・削除 を選択して実行します。
+#
+# ※ Geminiで作成 https://gemini.google.com/app/7c2b14b4ba16931f?hl=ja
 # ------------------------------------------------------------------
 function gw() {
   # メニュー項目の定義
