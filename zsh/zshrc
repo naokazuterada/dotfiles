@@ -294,8 +294,9 @@ function gw() {
       ;;
 
     "3. New"*)
-      echo -n "新規ブランチ名を入力 (例: feature/login): "
-      read branch_name
+      local branch_name="feature/"
+      # プロンプト一体型で入力
+      vared -p "新規ブランチ名を入力: " branch_name
       [ -z "$branch_name" ] && return
       local dir_name=$(echo $branch_name | sed 's/\//-/g')
       local target_dir="../$(basename $(pwd)).$dir_name"
