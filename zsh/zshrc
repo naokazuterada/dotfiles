@@ -275,8 +275,12 @@ function gw() {
   )
 
   # メニューを fzf で表示
-  local action=$(printf "%s\n" "${ACTIONS[@]}" | fzf --height 10% --reverse --header "Git Worktree Menu")
+  local action=$(printf "%s\n" "${ACTIONS[@]}" | fzf --height 15% --reverse --header "Git Worktree Menu")
   [ -z "$action" ] && return
+
+  # Gitのメインリポジトリの絶対パスを取得（判定用）
+  # git rev-parse --git-common-dir はワークツリー内でもメインの .git パスを返します
+  local main_path=$(git rev-parse --path-format=absolute --git-common-dir | sed 's/\/\.git$//')
 
   case "$action" in
     "1. Switch"*)
@@ -304,15 +308,27 @@ function gw() {
       ;;
 
     "4. Remove"*)
-      local selected=$(git worktree list | fzf --height 40% --reverse --header "削除するワークツリーを選択" | awk '{print $1}')
-      if [ -n "$selected" ]; then
-        if [ "$selected" = "$(git rev-parse --show-toplevel)" ]; then
-          echo "メインリポジトリは削除できません。"
-          return
+      # 削除対象を選択
+      local selected_line=$(git worktree list | fzf --height 40% --reverse --header "削除するワークツリーを選択")
+      [ -z "$selected_line" ] && return
+      local selected_path=$(echo "$selected_line" | awk '{print $1}')
+
+      # 判定ロジック：選択したパスがメインリポジトリのパスと一致するか
+      if [ "$selected_path" = "$main_path" ]; then
+        echo "エラー: メインリポジトリ ($main_path) は削除できません。"
+        return
+      fi
+
+      echo -n "本当に削除しますか？ (y/n): "
+      read opt
+      if [ "$opt" = "y" ]; then
+        # もし削除対象の中に今いるなら、削除前にメインへ避難する
+        if [ "$(pwd)" = "$selected_path" ]; then
+            echo "削除対象の中にいるため、メインリポジトリへ移動します。"
+            cd "$main_path"
         fi
-        echo -n "本当に削除しますか？ (y/n): "
-        read opt
-        [ "$opt" = "y" ] && git worktree remove "$selected"
+        git worktree remove "$selected_path"
+        echo "削除完了しました。"
       fi
       ;;
   esac
