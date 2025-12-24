@@ -87,9 +87,6 @@ alias clearDNS='sudo killall -HUP mDNSResponder'
 # https://support.google.com/chrome/a/answer/6271282?hl=en
 alias chrome_log='/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --enable-logging=stderr --v=1'
 
-# .node-versionが古めに設定されたプロジェクトでもClaudeを常に使えるようにするために、claude用のnodeバージョンを固定
-alias claude='NODENV_VERSION=22.18.0 claude'
-
 # pecoを使ってプロセス名から選んでシグナルを送る
 alias intps='ps -ax | peco | xargs kill -2' # 割り込み（Ctrl+Cと同じ）
 alias quitps='ps -ax | peco | xargs kill -3' # 終了
