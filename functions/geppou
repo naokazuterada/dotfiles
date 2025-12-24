@@ -53,12 +53,49 @@ if [ -z "$LOG_DATA" ]; then
 fi
 
 # プロンプトとデータを結合してクリップボードにコピー
-PROMPT="以下は${SELECTED}の作業ログです。月報用に案件ごとに要約してください。日本語で回答:
+PROMPT="あなたは日本語で回答するアシスタントです。
 
+以下は${SELECTED}の画面キャプチャから取得した作業記録です。
+この記録から、どのような案件・プロジェクトに取り組んでいたかを読み取り、月報形式で要約してください。
+
+【出力形式】
+- 案件/プロジェクト名ごとに箇条書きで整理
+- 各案件で行った作業内容を簡潔にまとめる
+- 技術的なコマンドやコードの詳細は不要、作業の概要のみ
+
+必ず日本語で回答してください。
+
+---
 $LOG_DATA"
 
 echo "$PROMPT" | pbcopy
 
 echo ""
 echo "クリップボードにコピーしました！"
-echo "Ollamaデスクトップにペーストして実行してください。"
+
+# AIアプリを選択
+echo ""
+echo "どのAIアプリを使いますか？"
+AI_APP=$(printf "Ollama\nClaude" | fzf --height 20% --reverse --header "AIアプリを選択")
+
+if [ -z "$AI_APP" ]; then
+  echo "キャンセルしました（クリップボードにはコピー済み）"
+  exit 0
+fi
+
+echo "${AI_APP}を開いて自動入力します..."
+
+# AppleScriptでアプリを開いてペースト＆送信
+osascript <<APPLESCRIPT
+tell application "$AI_APP"
+    activate
+end tell
+
+delay 1
+
+tell application "System Events"
+    keystroke "v" using command down
+    delay 0.5
+    keystroke return
+end tell
+APPLESCRIPT
