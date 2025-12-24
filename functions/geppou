@@ -1,12 +1,64 @@
 #!/bin/bash
 # 月報データ取得スクリプト
+# screenpipeから指定月の作業ログを取得し、Ollamaデスクトップ用にクリップボードへコピー
 
-# 先月の日付範囲を計算
-START_DATE=$(date -v-1m -v1d +%Y-%m-%dT00:00:00)
-END_DATE=$(date -v1d -v-1d +%Y-%m-%dT23:59:59)
+# 月選択メニューを生成（今月から6ヶ月分 + 自由入力）
+generate_month_options() {
+  for i in 0 1 2 3 4 5; do
+    date -v-${i}m +"%Y年%m月"
+  done
+  echo "その他（自由入力）"
+}
+
+# 月を選択
+echo "何月の月報を作成しますか？"
+SELECTED=$(generate_month_options | fzf --height 40% --reverse --header "月を選択")
+
+if [ -z "$SELECTED" ]; then
+  echo "キャンセルしました"
+  exit 0
+fi
+
+# 選択に応じて日付範囲を計算
+if [ "$SELECTED" = "その他（自由入力）" ]; then
+  echo -n "対象年月を入力してください (例: 2024-06): "
+  read INPUT_MONTH
+  if [ -z "$INPUT_MONTH" ]; then
+    echo "キャンセルしました"
+    exit 0
+  fi
+  # 入力値から日付範囲を計算
+  START_DATE="${INPUT_MONTH}-01T00:00:00Z"
+  # 翌月1日の前日 = 当月末日
+  END_DATE=$(date -j -v+1m -v-1d -f "%Y-%m-%d" "${INPUT_MONTH}-01" "+%Y-%m-%dT23:59:59Z")
+else
+  # 選択された月から日付範囲を計算 (例: "2024年12月" -> "2024-12")
+  YEAR_MONTH=$(echo "$SELECTED" | sed 's/年/-/; s/月//')
+  START_DATE="${YEAR_MONTH}-01T00:00:00Z"
+  END_DATE=$(date -j -v+1m -v-1d -f "%Y-%m-%d" "${YEAR_MONTH}-01" "+%Y-%m-%dT23:59:59Z")
+fi
+
+echo ""
+echo "期間: $START_DATE 〜 $END_DATE"
+echo "screenpipeからデータを取得中..."
 
 # screenpipeからデータ取得
-curl -s "http://localhost:3030/search?start_time=${START_DATE}&end_time=${END_DATE}&limit=500" \
-  | jq -r '[.data[].content.text // empty] | join("\n")' \
-  | head -c 15000 \
-  | ollama run gemma3:4b "以下は先月の作業ログです。月報用に案件ごとに要約してください。日本語で回答:"
+LOG_DATA=$(curl -s "http://localhost:3030/search?start_time=${START_DATE}&end_time=${END_DATE}&limit=500" \
+  | jq -r '[.data[].content.text // empty] | join("\n")' 2>/dev/null \
+  | head -c 15000)
+
+if [ -z "$LOG_DATA" ]; then
+  echo "エラー: データを取得できませんでした。screenpipeが起動しているか確認してください。"
+  exit 1
+fi
+
+# プロンプトとデータを結合してクリップボードにコピー
+PROMPT="以下は${SELECTED}の作業ログです。月報用に案件ごとに要約してください。日本語で回答:
+
+$LOG_DATA"
+
+echo "$PROMPT" | pbcopy
+
+echo ""
+echo "クリップボードにコピーしました！"
+echo "Ollamaデスクトップにペーストして実行してください。"
