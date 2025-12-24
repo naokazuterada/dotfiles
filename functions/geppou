@@ -76,7 +76,7 @@ echo "クリップボードにコピーしました！"
 # AIアプリを選択
 echo ""
 echo "どのAIアプリを使いますか？"
-AI_APP=$(printf "Ollama\nClaude" | fzf --height 20% --reverse --header "AIアプリを選択")
+AI_APP=$(printf "Ollama\nClaude\nChatGPT" | fzf --height 20% --reverse --header "AIアプリを選択")
 
 if [ -z "$AI_APP" ]; then
   echo "キャンセルしました（クリップボードにはコピー済み）"
