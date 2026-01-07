@@ -1,0 +1,150 @@
+#!/bin/zsh
+
+################################################################################
+# VPNタイマー - 指定時間後に自動切断
+################################################################################
+#
+# 【重要】このスクリプトを使用する前に、以下の設定が必要です:
+#
+# 1. メニューバーにVPNステータスを表示する
+#    システム設定 > VPN > 「メニューバーにVPNステータスを表示」をON
+#
+# 2. アクセシビリティ権限の許可
+#    システム設定 > プライバシーとセキュリティ > アクセシビリティ
+#    「ターミナル」にチェックを入れる
+#
+################################################################################
+
+# VPN接続名
+VPN_NAME="MyIP"
+
+# AppleScriptでVPNを接続する関数
+vpn_connect() {
+    osascript <<'EOF'
+tell application "System Events"
+    tell menu bar 1 of application process "SystemUIServer"
+        set vpnMenu to menu bar item 1
+        click vpnMenu
+        delay 0.3
+
+        tell vpnMenu
+            -- "接続: MyIP" という項目をクリック
+            try
+                click menu item "接続: MyIP" of menu 1
+                return true
+            on error
+                -- すでに接続中の可能性
+                key code 53 -- ESC
+                return false
+            end try
+        end tell
+    end tell
+end tell
+EOF
+}
+
+# AppleScriptでVPNを切断する関数
+vpn_disconnect() {
+    osascript <<'EOF'
+tell application "System Events"
+    tell menu bar 1 of application process "SystemUIServer"
+        set vpnMenu to menu bar item 1
+        click vpnMenu
+        delay 0.3
+
+        tell vpnMenu
+            -- "接続解除: MyIP" という項目を探してクリック
+            try
+                click menu item "接続解除: MyIP" of menu 1
+                return true
+            on error
+                -- 見つからなかった場合はメニューを閉じる
+                key code 53 -- ESC
+                return false
+            end try
+        end tell
+    end tell
+end tell
+EOF
+}
+
+# AppleScriptでVPN状態を確認する関数
+vpn_status() {
+    osascript <<'EOF'
+tell application "System Events"
+    tell menu bar 1 of application process "SystemUIServer"
+        set vpnMenu to menu bar item 1
+        click vpnMenu
+        delay 0.3
+
+        tell vpnMenu
+            set menuItems to menu items of menu 1
+            set isConnected to 0
+
+            repeat with mi in menuItems
+                try
+                    set itemName to name of mi as text
+                    -- "接続解除: MyIP" という項目があれば接続中
+                    if itemName is "接続解除: MyIP" then
+                        set isConnected to 1
+                        exit repeat
+                    end if
+                end try
+            end repeat
+
+            -- メニューを閉じる
+            key code 53 -- ESC
+            return isConnected
+        end tell
+    end tell
+end tell
+EOF
+}
+
+# 時間選択
+time_options=(
+    # "5秒"  # デバッグ用
+    "5分"
+    "15分"
+    "30分"
+    "1時間"
+)
+
+selected_time=$(printf '%s\n' "${time_options[@]}" | fzf --prompt="時間を選択: " --height=40% --reverse)
+
+if [ -z "$selected_time" ]; then
+    echo "選択がキャンセルされました"
+    exit 1
+fi
+
+case "$selected_time" in
+    # "5秒") DURATION=5; TIME_TEXT="5秒" ;;  # デバッグ用
+    "5分") DURATION=300; TIME_TEXT="5分" ;;
+    "15分") DURATION=900; TIME_TEXT="15分" ;;
+    "30分") DURATION=1800; TIME_TEXT="30分" ;;
+    "1時間") DURATION=3600; TIME_TEXT="1時間" ;;
+    *) echo "無効な選択です"; exit 1 ;;
+esac
+
+# VPN接続
+echo "VPNに接続しています..."
+vpn_connect
+sleep 2  # 接続完了を待つ
+
+# 通知
+echo "${TIME_TEXT}後に自動切断します..."
+
+# 指定時間待機
+sleep $DURATION
+
+# VPN接続状態を確認
+VPN_STATUS=$(vpn_status)
+
+# 自動切断
+if [ "$VPN_STATUS" = "1" ]; then
+    echo "VPNを切断しています..."
+    vpn_disconnect
+    echo "VPN接続を解除しました"
+else
+    echo "VPNはすでに切断されています"
+fi
