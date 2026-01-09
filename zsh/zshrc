@@ -34,6 +34,7 @@ alias wp-themes='cd ./wp/wp-content/themes'
 alias od='open ~/Desktop'
 alias odot='open ~/Sites'
 alias os='open ~/Sites'
+alias kindle2pdf='cd ~/Applications/kindle2pdf && open .'
 
 # htpasswd
 # make file `.htpasswd` in current dir with MD5 hash
