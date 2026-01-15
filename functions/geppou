@@ -52,10 +52,43 @@ if [ -z "$LOG_DATA" ]; then
   exit 1
 fi
 
+# ~/Sites以下のリポジトリからコミット履歴を取得
+echo "コミット履歴を取得中..."
+
+# 日付範囲をgit log用に変換（YEAR_MONTHまたはINPUT_MONTHを使用）
+if [ -n "$INPUT_MONTH" ]; then
+  GIT_SINCE="${INPUT_MONTH}-01"
+  GIT_UNTIL=$(date -j -v+1m -f "%Y-%m-%d" "${INPUT_MONTH}-01" "+%Y-%m-%d")
+else
+  GIT_SINCE="${YEAR_MONTH}-01"
+  GIT_UNTIL=$(date -j -v+1m -f "%Y-%m-%d" "${YEAR_MONTH}-01" "+%Y-%m-%d")
+fi
+
+COMMIT_DATA=""
+for repo in ~/Sites/*/; do
+  if [ -d "$repo/.git" ]; then
+    commits=$(git -C "$repo" log --author="$(git -C "$repo" config user.name)" --since="$GIT_SINCE" --until="$GIT_UNTIL" --oneline 2>/dev/null)
+    if [ -n "$commits" ]; then
+      COMMIT_DATA="${COMMIT_DATA}=== $(basename "$repo") ===
+$commits
+
+"
+    fi
+  fi
+done
+
 # プロンプトとデータを結合してクリップボードにコピー
+COMMIT_SECTION=""
+if [ -n "$COMMIT_DATA" ]; then
+  COMMIT_SECTION="
+---
+【Gitコミット履歴】
+$COMMIT_DATA"
+fi
+
 PROMPT="あなたは日本語で回答するアシスタントです。
 
-以下は${SELECTED}の画面キャプチャから取得した作業記録です。
+以下は${SELECTED}の画面キャプチャから取得した作業記録と、Gitコミット履歴です。
 この記録から、どのような案件・プロジェクトに取り組んでいたかを読み取り、月報形式で要約してください。
 
 【出力形式】
@@ -66,7 +99,9 @@ PROMPT="あなたは日本語で回答するアシスタントです。
 必ず日本語で回答してください。
 
 ---
-$LOG_DATA"
+【画面キャプチャ記録】
+$LOG_DATA
+$COMMIT_SECTION"
 
 echo "$PROMPT" | pbcopy
 
@@ -76,7 +111,7 @@ echo "クリップボードにコピーしました！"
 # AIアプリを選択
 echo ""
 echo "どのAIアプリを使いますか？"
-AI_APP=$(printf "Ollama\nClaude\nChatGPT" | fzf --height 20% --reverse --header "AIアプリを選択")
+AI_APP=$(printf "ChatGPT\nClaude\nOllama" | fzf --height 20% --reverse --header "AIアプリを選択")
 
 if [ -z "$AI_APP" ]; then
   echo "キャンセルしました（クリップボードにはコピー済み）"
