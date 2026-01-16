@@ -8,3 +8,6 @@ vendor/bin
 # claude-mem自動生成ファイル（サブディレクトリのみ除外、ルートは維持）
 **/CLAUDE.md
 !/CLAUDE.md
+
+# Claude Code
+.claude/settings.local.json
