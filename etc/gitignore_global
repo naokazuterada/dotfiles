@@ -1,2 +1,10 @@
 *~
 .DS_Store
+
+# Ruby bundler
+vendor/bundle
+vendor/bin
+
+# claude-mem自動生成ファイル（サブディレクトリのみ除外、ルートは維持）
+**/CLAUDE.md
+!/CLAUDE.md
