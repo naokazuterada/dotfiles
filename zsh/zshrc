@@ -10,6 +10,29 @@ if [[ -s "${ZDOTDIR:-$HOME}/.zprezto/init.zsh" ]]; then
   source "${ZDOTDIR:-$HOME}/.zprezto/init.zsh"
 fi
 
+# ====================
+# PATH settings (before anyenv to ensure proper priority)
+# ====================
+# Homebrew
+export PATH=/opt/homebrew/bin:$PATH
+export PATH="/opt/homebrew/opt/llvm/bin:$PATH"
+# MAMP
+export PATH=/Applications/MAMP/bin/php/php8.3.0/bin:$PATH
+export PATH=$PATH:/Applications/MAMP/Library/bin/
+# User binaries
+export PATH=$PATH:$HOME/bin
+export PATH=$PATH:$HOME/.rbenv/bin
+export PATH=$PATH:$HOME/.dotfiles/functions
+# AWS CLI
+export PATH=~/.local/bin:$PATH
+# Project local
+export PATH=$PATH:./vendor/bin:./bin  # bundler
+export PATH=$PATH:./node_modules/.bin  # npm
+
+# anyenv initialization (after PATH settings so nodenv shims take priority)
+export PATH="$HOME/.anyenv/bin:$PATH"
+eval "$(anyenv init -)"
+
 # Customize to your needs...
 
 autoload -Uz zmv
@@ -184,31 +207,6 @@ function heic2jpg {
     fi
   fi
 }
-
-# ====================
-# PATH settings
-# ====================
-# Homebrew
-export PATH=/opt/homebrew/bin:$PATH
-export PATH="/opt/homebrew/opt/llvm/bin:$PATH"
-# MAMP
-export PATH=/Applications/MAMP/bin/php/php8.3.0/bin:$PATH
-export PATH=$PATH:/Applications/MAMP/Library/bin/
-# User binaries
-export PATH=$PATH:$HOME/bin
-export PATH=$PATH:$HOME/.rbenv/bin
-export PATH=$PATH:$HOME/.dotfiles/functions
-# Package managers
-export PATH="$HOME/.yarn/bin:$HOME/.config/yarn/global/node_modules/.bin:$PATH"
-export PATH=~/.local/bin:$PATH  # AWS CLI
-# Project local
-export PATH=$PATH:./vendor/bin:./bin  # bundler
-export PATH=$PATH:./node_modules/.bin  # npm
-
-# for anyenv->
-export PATH="$HOME/.anyenv/bin:$PATH"
-eval "$(anyenv init -)"
-# <-for anyenv
 
 # for pyenv
 export PYENV_ROOT=$HOME/.pyenv
