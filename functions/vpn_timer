@@ -108,6 +108,13 @@ time_options=(
     "15分"
     "30分"
     "1時間"
+    "2時間"
+    "3時間"
+    "4時間"
+    "5時間"
+    "6時間"
+    "7時間"
+    "8時間"
 )
 
 selected_time=$(printf '%s\n' "${time_options[@]}" | fzf --prompt="時間を選択: " --height=40% --reverse)
@@ -123,6 +130,13 @@ case "$selected_time" in
     "15分") DURATION=900; TIME_TEXT="15分" ;;
     "30分") DURATION=1800; TIME_TEXT="30分" ;;
     "1時間") DURATION=3600; TIME_TEXT="1時間" ;;
+    "2時間") DURATION=7200; TIME_TEXT="2時間" ;;
+    "3時間") DURATION=10800; TIME_TEXT="3時間" ;;
+    "4時間") DURATION=14400; TIME_TEXT="4時間" ;;
+    "5時間") DURATION=18000; TIME_TEXT="5時間" ;;
+    "6時間") DURATION=21600; TIME_TEXT="6時間" ;;
+    "7時間") DURATION=25200; TIME_TEXT="7時間" ;;
+    "8時間") DURATION=28800; TIME_TEXT="8時間" ;;
     *) echo "無効な選択です"; exit 1 ;;
 esac
 
