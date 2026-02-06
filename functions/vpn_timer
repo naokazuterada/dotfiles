@@ -145,11 +145,25 @@ echo "VPNに接続しています..."
 vpn_connect
 sleep 2  # 接続完了を待つ
 
+# Ctrl+C等で中断された場合のクリーンアップ処理
+cleanup() {
+    echo ""
+    echo "中断されました。VPNを切断しています..."
+    vpn_disconnect
+    echo "VPN接続を解除しました"
+    exit 0
+}
+trap cleanup SIGINT SIGTERM
+
 # 通知
 echo "${TIME_TEXT}後に自動切断します..."
+echo "(Ctrl+Cで中断するとVPNを切断して終了します)"
 
 # 指定時間待機
 sleep $DURATION
+
+# trapを解除（通常終了時のために）
+trap - SIGINT SIGTERM
 
 # VPN接続状態を確認
 VPN_STATUS=$(vpn_status)
