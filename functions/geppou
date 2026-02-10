@@ -111,7 +111,7 @@ echo "クリップボードにコピーしました！"
 # AIアプリを選択
 echo ""
 echo "どのAIアプリを使いますか？"
-AI_APP=$(printf "ChatGPT\nClaude\nOllama\nコピーのみ" | fzf --height 20% --reverse --header "AIアプリを選択")
+AI_APP=$(printf "ChatGPT\nClaude\nGemini\nOllama\nコピーのみ" | fzf --height 20% --reverse --header "AIアプリを選択")
 
 if [ -z "$AI_APP" ]; then
   echo "キャンセルしました（クリップボードにはコピー済み）"
@@ -125,8 +125,18 @@ fi
 
 echo "${AI_APP}を開いて自動入力します..."
 
-# AppleScriptでアプリを開いてペースト＆送信
-osascript <<APPLESCRIPT
+if [ "$AI_APP" = "Gemini" ]; then
+  open "https://gemini.google.com/app"
+  sleep 3
+  osascript <<APPLESCRIPT
+tell application "System Events"
+    keystroke "v" using command down
+    delay 0.5
+    keystroke return
+end tell
+APPLESCRIPT
+else
+  osascript <<APPLESCRIPT
 tell application "$AI_APP"
     activate
 end tell
@@ -139,3 +149,4 @@ tell application "System Events"
     keystroke return
 end tell
 APPLESCRIPT
+fi
