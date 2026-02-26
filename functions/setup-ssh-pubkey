@@ -1,0 +1,122 @@
+#!/bin/bash
+# SSH公開鍵セットアップ
+# リモートサーバーに公開鍵を登録してパスワードなし接続を設定する
+
+DEFAULT_PUBKEY="$HOME/.ssh/id_rsa.pub"
+
+# 公開鍵ファイルを検出
+detect_pubkeys() {
+  for f in "$HOME"/.ssh/*.pub; do
+    [ -f "$f" ] && echo "$f"
+  done
+}
+
+# 公開鍵を選択
+select_pubkey() {
+  local keys
+  keys=$(detect_pubkeys)
+
+  if [ -z "$keys" ]; then
+    echo "エラー: ~/.ssh/ に公開鍵ファイル（*.pub）が見つかりません" >&2
+    return 1
+  fi
+
+  local count
+  count=$(echo "$keys" | wc -l | tr -d ' ')
+
+  if [ "$count" -eq 1 ]; then
+    echo "$keys"
+    return 0
+  fi
+
+  # 複数の鍵がある場合はfzfで選択
+  echo "複数の公開鍵が見つかりました:" >&2
+  local selected
+  selected=$(echo "$keys" | fzf --height 40% --reverse --header "使用する公開鍵を選択" --query "id_rsa")
+
+  if [ -z "$selected" ]; then
+    echo "キャンセルしました" >&2
+    return 1
+  fi
+
+  echo "$selected"
+}
+
+# --- メイン処理 ---
+
+# 接続情報の入力
+echo -n "接続先ホスト名またはIPアドレス: "
+read -r REMOTE_HOST
+if [ -z "$REMOTE_HOST" ]; then
+  echo "キャンセルしました"
+  exit 0
+fi
+
+echo -n "ユーザー名: "
+read -r REMOTE_USER
+if [ -z "$REMOTE_USER" ]; then
+  echo "キャンセルしました"
+  exit 0
+fi
+
+echo -n "SSHポート [22]: "
+read -r REMOTE_PORT
+REMOTE_PORT=${REMOTE_PORT:-22}
+
+# 公開鍵の選択
+PUBKEY_FILE=$(select_pubkey) || exit 1
+PUBKEY_CONTENT=$(cat "$PUBKEY_FILE")
+
+echo ""
+echo "=== 設定内容 ==="
+echo "ホスト:   ${REMOTE_USER}@${REMOTE_HOST}"
+echo "ポート:   ${REMOTE_PORT}"
+echo "公開鍵:   ${PUBKEY_FILE}"
+echo ""
+echo -n "この内容で公開鍵を登録しますか？ [Y/n]: "
+read -r CONFIRM
+if [[ "$CONFIRM" =~ ^[nN] ]]; then
+  echo "キャンセルしました"
+  exit 0
+fi
+
+# リモートに公開鍵を登録
+echo ""
+echo "パスワード認証でリモートサーバーに接続します..."
+echo ""
+
+ssh -p "$REMOTE_PORT" \
+  -o PreferredAuthentications=password \
+  -o PubkeyAuthentication=no \
+  "${REMOTE_USER}@${REMOTE_HOST}" \
+  "mkdir -p ~/.ssh && chmod 700 ~/.ssh && touch ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys && if grep -qF '${PUBKEY_CONTENT}' ~/.ssh/authorized_keys 2>/dev/null; then echo 'この公開鍵は既に登録されています'; else printf '%s\n' '${PUBKEY_CONTENT}' >> ~/.ssh/authorized_keys && echo '公開鍵を登録しました'; fi"
+
+if [ $? -ne 0 ]; then
+  echo ""
+  echo "[失敗] リモートサーバーへの接続に失敗しました"
+  exit 1
+fi
+
+# 接続テスト
+echo ""
+echo "公開鍵認証で接続テスト中..."
+if ssh -p "$REMOTE_PORT" \
+  -o PasswordAuthentication=no \
+  -o BatchMode=yes \
+  "${REMOTE_USER}@${REMOTE_HOST}" \
+  "echo 'パスワードなしでの接続に成功しました'"; then
+
+  echo ""
+  echo "[完了] セットアップが正常に完了しました"
+  echo ""
+  echo "--- 接続コマンド ---"
+  if [ "$REMOTE_PORT" = "22" ]; then
+    echo "  ssh ${REMOTE_USER}@${REMOTE_HOST}"
+  else
+    echo "  ssh -p ${REMOTE_PORT} ${REMOTE_USER}@${REMOTE_HOST}"
+  fi
+else
+  echo ""
+  echo "[警告] 公開鍵認証での接続テストに失敗しました"
+  echo "リモートサーバーの sshd_config で PubkeyAuthentication が有効か確認してください"
+fi
