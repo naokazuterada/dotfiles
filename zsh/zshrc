@@ -59,9 +59,7 @@ alias odot='open ~/Sites'
 alias os='open ~/Sites'
 alias kindle2pdf='cd ~/Applications/kindle2pdf && open .'
 
-# htpasswd
-# make file `.htpasswd` in current dir with MD5 hash
-alias htpasswd='htpasswd -cbm .htpasswd'
+alias htpasswd='$HOME/.dotfiles/functions/htpasswd'
 
 # Local IP address
 # WiFiとEthernetでIPが違うので、どちらでも大丈夫なようリストから選択式
