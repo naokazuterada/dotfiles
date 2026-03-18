@@ -9,6 +9,10 @@ vendor/bin
 **/CLAUDE.md
 !/CLAUDE.md
 
+# Webpack
+*.LICENSE.txt
+
 # Claude Code
 .claude/settings.local.json
 .claude/local/
+.claude/worktrees/
