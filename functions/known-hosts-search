@@ -1,0 +1,30 @@
+#!/bin/bash
+# known-hosts-search - ~/.ssh/known_hosts からエントリを検索・コピー
+#
+# fzfでリアルタイム検索し、選択した行をクリップボードにコピーする。
+# GitHub Secrets の KNOWN_HOSTS 登録時などに便利。
+#
+# Usage:
+#   known-hosts-search [検索文字列]
+
+KNOWN_HOSTS="$HOME/.ssh/known_hosts"
+
+if [[ ! -f "$KNOWN_HOSTS" ]]; then
+  echo "エラー: $KNOWN_HOSTS が見つかりません"
+  exit 1
+fi
+
+query="${1:-}"
+
+selected=$(cat "$KNOWN_HOSTS" \
+  | fzf --height 50% --reverse --multi \
+    --query "$query" \
+    --header "known_hosts を検索 (Tab: 複数選択, Enter: コピー, Esc: キャンセル)")
+
+if [[ -z "$selected" ]]; then
+  exit 0
+fi
+
+echo "$selected" | pbcopy
+echo "コピーしました ($(echo "$selected" | wc -l | tr -d ' ')行):"
+echo "$selected"
