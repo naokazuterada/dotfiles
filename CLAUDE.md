@@ -21,7 +21,8 @@ Rakefileが `etc/` 配下のファイルを `~/.ファイル名` として、`zs
 - **`etc/`** — ドットファイル群（gitconfig, zpreztorc, gemrc, tigrc, rspec, gitignore_global）。Rakeで `~/.<ファイル名>` にシンボリックリンクされる
 - **`functions/`** — カスタムシェル関数。PATHに追加済みでコマンドとして直接実行可能
   - `geppou` — screenpipe + git log から月報を生成しAIアプリに送信（bash）
-  - `vpn_timer` — AppleScript経由でVPN接続/タイマー切断を管理（zsh）
+  - `vpn_timer` — AppleScript経由でVPN接続/タイマー切断を管理（zsh・ターミナル版）
+- **`vpn-timer/`** — VPN TimerのmacOSアプリ版（.app）。ソースとREADMEを格納。詳細は `vpn-timer/README.md` を参照
 - **`install.sh`** — 初回セットアップスクリプト。`rake setup` + ツールインストール
 - **`zsh/install-tools.sh`** — Homebrew経由で依存ツール（peco, jq, gibo, shellcheck等）をインストール
 
