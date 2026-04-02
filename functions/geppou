@@ -1,6 +1,86 @@
 #!/bin/bash
 # 月報データ取得スクリプト
-# screenpipeから指定月の作業ログを取得し、Ollamaデスクトップ用にクリップボードへコピー
+# screenpipeから指定月の作業ログを取得し、AIアプリに送信
+
+CACHE_DIR="$HOME/.cache/geppou"
+
+# ヘルプ
+if [ "$1" = "help" ] || [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
+  cat <<'HELP'
+geppou - 月報生成ツール
+
+使い方:
+  geppou              月報を作成（月選択 → データ取得 → AIアプリへ送信）
+  geppou cache list   キャッシュ一覧を表示
+  geppou cache clear  fzfで選択してキャッシュを削除
+  geppou cache clear YYYY-MM  指定月のキャッシュを削除
+  geppou cache clear --all    全キャッシュを削除
+  geppou help         このヘルプを表示
+
+概要:
+  screenpipeの画面キャプチャ記録と~/Sites以下のGitコミット履歴から
+  月報用のプロンプトを生成し、選択したAIアプリに送信します。
+  同じ月のデータはキャッシュされ、再実行時に再利用されます。
+
+キャッシュ:
+  保存先: ~/.cache/geppou/
+  再取得したい場合は cache clear で削除してから再実行してください。
+HELP
+  exit 0
+fi
+
+# キャッシュ管理サブコマンド
+if [ "$1" = "cache" ]; then
+  case "$2" in
+    list|ls)
+      if [ ! -d "$CACHE_DIR" ] || [ -z "$(ls "$CACHE_DIR" 2>/dev/null)" ]; then
+        echo "キャッシュはありません"
+        exit 0
+      fi
+      echo "キャッシュ一覧:"
+      for f in "$CACHE_DIR"/*_screenpipe.txt; do
+        [ -f "$f" ] || continue
+        month=$(basename "$f" | sed 's/_screenpipe\.txt//')
+        size_s=$(wc -c < "$f" | tr -d ' ')
+        size_c=0
+        [ -f "$CACHE_DIR/${month}_commits.txt" ] && size_c=$(wc -c < "$CACHE_DIR/${month}_commits.txt" | tr -d ' ')
+        echo "  ${month}  screenpipe: ${size_s}B  commits: ${size_c}B"
+      done
+      ;;
+    clear)
+      if [ "$3" = "--all" ]; then
+        rm -rf "$CACHE_DIR"
+        echo "全キャッシュを削除しました"
+      elif [ -n "$3" ]; then
+        rm -f "$CACHE_DIR/${3}_screenpipe.txt" "$CACHE_DIR/${3}_commits.txt"
+        echo "${3} のキャッシュを削除しました"
+      else
+        # fzfで選択
+        if [ ! -d "$CACHE_DIR" ] || [ -z "$(ls "$CACHE_DIR"/*_screenpipe.txt 2>/dev/null)" ]; then
+          echo "キャッシュはありません"
+          exit 0
+        fi
+        MONTHS=$(for f in "$CACHE_DIR"/*_screenpipe.txt; do basename "$f" | sed 's/_screenpipe\.txt//'; done)
+        SELECTED=$(echo "$MONTHS" | fzf --height 30% --reverse --header "削除するキャッシュを選択")
+        if [ -n "$SELECTED" ]; then
+          rm -f "$CACHE_DIR/${SELECTED}_screenpipe.txt" "$CACHE_DIR/${SELECTED}_commits.txt"
+          echo "${SELECTED} のキャッシュを削除しました"
+        else
+          echo "キャンセルしました"
+        fi
+      fi
+      ;;
+    *)
+      echo "使い方: geppou cache <list|clear> [--all|YYYY-MM]"
+      echo ""
+      echo "  list        キャッシュ一覧を表示"
+      echo "  clear       fzfで選択して削除"
+      echo "  clear YYYY-MM  指定月のキャッシュを削除"
+      echo "  clear --all    全キャッシュを削除"
+      ;;
+  esac
+  exit 0
+fi
 
 # 月選択メニューを生成（今月から6ヶ月分 + 自由入力）
 generate_month_options() {
@@ -31,31 +111,43 @@ if [ "$SELECTED" = "その他（自由入力）" ]; then
   START_DATE="${INPUT_MONTH}-01T00:00:00Z"
   # 翌月1日の前日 = 当月末日
   END_DATE=$(date -j -v+1m -v-1d -f "%Y-%m-%d" "${INPUT_MONTH}-01" "+%Y-%m-%dT23:59:59Z")
+  CACHE_KEY="$INPUT_MONTH"
 else
   # 選択された月から日付範囲を計算 (例: "2024年12月" -> "2024-12")
   YEAR_MONTH=$(echo "$SELECTED" | sed 's/年/-/; s/月//')
   START_DATE="${YEAR_MONTH}-01T00:00:00Z"
   END_DATE=$(date -j -v+1m -v-1d -f "%Y-%m-%d" "${YEAR_MONTH}-01" "+%Y-%m-%dT23:59:59Z")
+  CACHE_KEY="$YEAR_MONTH"
 fi
 
 echo ""
 echo "期間: $START_DATE 〜 $END_DATE"
-echo "screenpipeからデータを取得中..."
 
-# screenpipeからデータ取得
-LOG_DATA=$(curl -s "http://localhost:3030/search?start_time=${START_DATE}&end_time=${END_DATE}&limit=500" \
-  | jq -r '[.data[].content.text // empty] | join("\n")' 2>/dev/null \
-  | head -c 15000)
+# キャッシュディレクトリ作成
+mkdir -p "$CACHE_DIR"
 
-if [ -z "$LOG_DATA" ]; then
-  echo "エラー: データを取得できませんでした。screenpipeが起動しているか確認してください。"
-  exit 1
+CACHE_SCREENPIPE="$CACHE_DIR/${CACHE_KEY}_screenpipe.txt"
+CACHE_COMMITS="$CACHE_DIR/${CACHE_KEY}_commits.txt"
+
+# screenpipeデータ取得（キャッシュあれば再利用）
+if [ -f "$CACHE_SCREENPIPE" ]; then
+  echo "screenpipeデータ: キャッシュを使用"
+  LOG_DATA=$(cat "$CACHE_SCREENPIPE")
+else
+  echo "screenpipeからデータを取得中..."
+  LOG_DATA=$(curl -s "http://localhost:3030/search?start_time=${START_DATE}&end_time=${END_DATE}&limit=500" \
+    | jq -r '[.data[].content.text // empty] | join("\n")' 2>/dev/null \
+    | head -c 15000)
+
+  if [ -z "$LOG_DATA" ]; then
+    echo "エラー: データを取得できませんでした。screenpipeが起動しているか確認してください。"
+    exit 1
+  fi
+  echo "$LOG_DATA" > "$CACHE_SCREENPIPE"
+  echo "screenpipeデータ: キャッシュに保存しました"
 fi
 
-# ~/Sites以下のリポジトリからコミット履歴を取得
-echo "コミット履歴を取得中..."
-
-# 日付範囲をgit log用に変換（YEAR_MONTHまたはINPUT_MONTHを使用）
+# コミット履歴取得（キャッシュあれば再利用）
 if [ -n "$INPUT_MONTH" ]; then
   GIT_SINCE="${INPUT_MONTH}-01"
   GIT_UNTIL=$(date -j -v+1m -f "%Y-%m-%d" "${INPUT_MONTH}-01" "+%Y-%m-%d")
@@ -64,18 +156,26 @@ else
   GIT_UNTIL=$(date -j -v+1m -f "%Y-%m-%d" "${YEAR_MONTH}-01" "+%Y-%m-%d")
 fi
 
-COMMIT_DATA=""
-for repo in ~/Sites/*/; do
-  if [ -d "$repo/.git" ]; then
-    commits=$(git -C "$repo" log --author="$(git -C "$repo" config user.name)" --since="$GIT_SINCE" --until="$GIT_UNTIL" --oneline 2>/dev/null)
-    if [ -n "$commits" ]; then
-      COMMIT_DATA="${COMMIT_DATA}=== $(basename "$repo") ===
+if [ -f "$CACHE_COMMITS" ]; then
+  echo "コミット履歴: キャッシュを使用"
+  COMMIT_DATA=$(cat "$CACHE_COMMITS")
+else
+  echo "コミット履歴を取得中..."
+  COMMIT_DATA=""
+  for repo in ~/Sites/*/; do
+    if [ -d "$repo/.git" ]; then
+      commits=$(git -C "$repo" log --author="$(git -C "$repo" config user.name)" --since="$GIT_SINCE" --until="$GIT_UNTIL" --oneline 2>/dev/null)
+      if [ -n "$commits" ]; then
+        COMMIT_DATA="${COMMIT_DATA}=== $(basename "$repo") ===
 $commits
 
 "
+      fi
     fi
-  fi
-done
+  done
+  echo "$COMMIT_DATA" > "$CACHE_COMMITS"
+  echo "コミット履歴: キャッシュに保存しました"
+fi
 
 # プロンプトとデータを結合してクリップボードにコピー
 COMMIT_SECTION=""
