@@ -1,0 +1,83 @@
+#!/bin/bash
+# figma-link - Figmaリンククリーナー（メニューバーアプリのCLIラッパー）
+
+MENU_BIN="$HOME/.dotfiles/figma-link/figma-link-menu"
+PROCESS_NAME="figma-link-menu"
+
+start_app() {
+  if pgrep -f "$PROCESS_NAME" > /dev/null 2>&1; then
+    echo "figma-link: すでに起動中です"
+    return 1
+  fi
+
+  if [ ! -x "$MENU_BIN" ]; then
+    echo "figma-link: バイナリが見つかりません。ビルドしてください:"
+    echo "  figma-link build"
+    return 1
+  fi
+
+  "$MENU_BIN" &
+  disown
+  echo "figma-link: 起動しました（メニューバーに 📋 が表示されます）"
+}
+
+stop_app() {
+  if pkill -f "$PROCESS_NAME"; then
+    echo "figma-link: 停止しました"
+  else
+    echo "figma-link: 起動していません"
+    return 1
+  fi
+}
+
+status_app() {
+  if pgrep -f "$PROCESS_NAME" > /dev/null 2>&1; then
+    echo "figma-link: 起動中 (PID: $(pgrep -f "$PROCESS_NAME"))"
+  else
+    echo "figma-link: 停止中"
+  fi
+}
+
+build_app() {
+  echo "figma-link: ビルド中..."
+  swiftc -o "$MENU_BIN" "$HOME/.dotfiles/figma-link/FigmaLink.swift" -framework Cocoa
+  if [ $? -eq 0 ]; then
+    echo "figma-link: ビルド完了"
+  else
+    echo "figma-link: ビルド失敗"
+    return 1
+  fi
+}
+
+show_help() {
+  cat <<'HELP'
+figma-link - Figmaリンククリーナー
+
+使い方:
+  figma-link start    メニューバーアプリを起動
+  figma-link stop     停止
+  figma-link status   動作状態を確認
+  figma-link build    Swiftソースからビルド
+  figma-link help     このヘルプを表示
+
+概要:
+  メニューバーに常駐し、クリップボードを監視します。
+  Figmaの定型文（「これらの1個のデザインをFigmaから実装して。」等）を
+  検出するとダイアログを表示し、URLのみに変換できます。
+
+  メニューバーの 📋 アイコンから監視の一時停止・再開・終了も可能です。
+HELP
+}
+
+case "${1:-help}" in
+  start)  start_app ;;
+  stop)   stop_app ;;
+  status) status_app ;;
+  build)  build_app ;;
+  help|--help|-h) show_help ;;
+  *)
+    echo "figma-link: 不明なコマンド '$1'"
+    echo "使い方: figma-link {start|stop|status|build|help}"
+    exit 1
+    ;;
+esac
