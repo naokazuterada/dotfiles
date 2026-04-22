@@ -82,34 +82,40 @@ class FigmaLinkController: NSObject, NSApplicationDelegate {
 
         guard let text = NSPasteboard.general.string(forType: .string) else { return }
 
-        if isFigmaBoilerplate(text), let url = extractFigmaURL(text) {
-            showCleanDialog(url: url)
+        if hasBoilerplate(text), let cleaned = removeBoilerplate(text) {
+            showCleanDialog(cleaned: cleaned)
         }
     }
 
-    func isFigmaBoilerplate(_ text: String) -> Bool {
-        text.contains("Figmaから実装して") && text.contains("@https://www.figma.com/")
+    // 「これらのN個のデザインをFigmaから実装して。」の定型文を検出
+    func hasBoilerplate(_ text: String) -> Bool {
+        text.range(of: "これらの.+をFigmaから実装して", options: .regularExpression) != nil
     }
 
-    func extractFigmaURL(_ text: String) -> String? {
-        guard let regex = try? NSRegularExpression(pattern: "https://www\\.figma\\.com/[^ \\n\\r]*"),
-              let match = regex.firstMatch(in: text, range: NSRange(text.startIndex..., in: text)),
-              let range = Range(match.range, in: text) else { return nil }
-        return String(text[range])
+    // 定型文の行を除去し、残りのテキスト（@URL等）を返す
+    func removeBoilerplate(_ text: String) -> String? {
+        let lines = text.components(separatedBy: "\n")
+        let filtered = lines.filter { line in
+            line.range(of: "これらの.+をFigmaから実装して", options: .regularExpression) == nil
+        }
+        let result = filtered.joined(separator: "\n")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        return result.isEmpty ? nil : result
     }
 
-    func showCleanDialog(url: String) {
+    func showCleanDialog(cleaned: String) {
         let alert = NSAlert()
-        alert.messageText = "Figmaリンクを検出しました"
-        alert.informativeText = "URLのみに変換しますか？\n\n\(url)"
-        alert.addButton(withTitle: "クリーニング")
+        alert.messageText = "Figmaの定型文を検出しました"
+        alert.informativeText = "コメント部分を削除しますか？"
+        alert.addButton(withTitle: "削除する")
         alert.addButton(withTitle: "そのまま")
         alert.alertStyle = .informational
 
+        NSApp.activate(ignoringOtherApps: true)
         let response = alert.runModal()
         if response == .alertFirstButtonReturn {
             NSPasteboard.general.clearContents()
-            NSPasteboard.general.setString(url, forType: .string)
+            NSPasteboard.general.setString(cleaned, forType: .string)
             prevChangeCount = NSPasteboard.general.changeCount
         }
     }
