@@ -7,6 +7,7 @@ class FigmaLinkController: NSObject, NSApplicationDelegate {
     var prevChangeCount: Int = 0
     var statusMenuItem: NSMenuItem!
     var toggleMenuItem: NSMenuItem!
+    let FIGMA_BUNDLE_ID = "com.figma.Desktop"
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
@@ -35,7 +36,25 @@ class FigmaLinkController: NSObject, NSApplicationDelegate {
 
         statusItem.menu = menu
 
-        startMonitoring()
+        // Figmaアプリの起動・終了イベントを監視
+        NSWorkspace.shared.notificationCenter.addObserver(
+            self,
+            selector: #selector(appDidLaunch(_:)),
+            name: NSWorkspace.didLaunchApplicationNotification,
+            object: nil
+        )
+
+        NSWorkspace.shared.notificationCenter.addObserver(
+            self,
+            selector: #selector(appDidTerminate(_:)),
+            name: NSWorkspace.didTerminateApplicationNotification,
+            object: nil
+        )
+
+        // 起動時にFigmaがすでに起動中かをチェック
+        if isFigmaRunning() {
+            startMonitoring()
+        }
     }
 
     @objc func toggleMonitoring() {
@@ -117,6 +136,32 @@ class FigmaLinkController: NSObject, NSApplicationDelegate {
             NSPasteboard.general.clearContents()
             NSPasteboard.general.setString(cleaned, forType: .string)
             prevChangeCount = NSPasteboard.general.changeCount
+        }
+    }
+
+    @objc func appDidLaunch(_ notification: Notification) {
+        guard let app = notification.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication,
+              app.bundleIdentifier == FIGMA_BUNDLE_ID else { return }
+
+        if !isMonitoring {
+            print("figma-link: Figmaが起動されました。監視を開始します。")
+            startMonitoring()
+        }
+    }
+
+    @objc func appDidTerminate(_ notification: Notification) {
+        guard let app = notification.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication,
+              app.bundleIdentifier == FIGMA_BUNDLE_ID else { return }
+
+        if isMonitoring {
+            print("figma-link: Figmaが終了しました。監視を停止します。")
+            stopMonitoring()
+        }
+    }
+
+    func isFigmaRunning() -> Bool {
+        NSWorkspace.shared.runningApplications.contains { app in
+            app.bundleIdentifier == FIGMA_BUNDLE_ID
         }
     }
 

@@ -42,54 +42,57 @@ figma-link help     # ヘルプを表示
 
 メニューバーの「Fig」からも監視の一時停止・再開・終了が可能。
 
-## 自動起動
+## Figmaアプリに連動した自動制御
 
-### 初回セットアップ
+Figmaアプリの起動・終了に合わせて、figma-linkを自動で起動・停止できます。
 
-LaunchAgentのplistを `~/Library/LaunchAgents/` に配置して登録する：
+### セットアップ
+
+LaunchAgentを登録する：
 
 ```bash
-cat > ~/Library/LaunchAgents/com.terada.figma-link.plist << 'EOF'
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-    <key>Label</key>
-    <string>com.terada.figma-link</string>
-    <key>ProgramArguments</key>
-    <array>
-        <string>/Users/terada/.dotfiles/figma-link/figma-link-menu</string>
-    </array>
-    <key>RunAtLoad</key>
-    <true/>
-    <key>KeepAlive</key>
-    <false/>
-</dict>
-</plist>
-EOF
-launchctl load ~/Library/LaunchAgents/com.terada.figma-link.plist
+launchctl load ~/Library/LaunchAgents/com.terada.figma-link-watcher.plist
 ```
+
+### 動作
+
+- **Figmaアプリが起動** → figma-linkが自動で起動（メニューバーに「Fig」が表示される）
+- **Figmaアプリが終了** → figma-linkが自動で停止
+- **ログイン時** → 監視スクリプトが自動で起動
+- **監視間隔** → 10秒ごとにFigmaの起動状態をチェック
 
 ### 管理コマンド
 
 ```bash
-# 自動起動を無効化
-launchctl unload ~/Library/LaunchAgents/com.terada.figma-link.plist
+# 登録確認
+launchctl list | grep figma
 
-# 自動起動を再度有効化
-launchctl load ~/Library/LaunchAgents/com.terada.figma-link.plist
+# 一時的に無効化
+launchctl unload ~/Library/LaunchAgents/com.terada.figma-link-watcher.plist
 
-# 自動起動を完全に削除
-launchctl unload ~/Library/LaunchAgents/com.terada.figma-link.plist
-rm ~/Library/LaunchAgents/com.terada.figma-link.plist
+# 再度有効化
+launchctl load ~/Library/LaunchAgents/com.terada.figma-link-watcher.plist
+
+# 完全に削除
+launchctl unload ~/Library/LaunchAgents/com.terada.figma-link-watcher.plist
+rm ~/Library/LaunchAgents/com.terada.figma-link-watcher.plist
+
+# 監視スクリプトを手動実行（テスト用）
+bash ~/.dotfiles/figma-link/watch-figma.sh
 ```
+
+### ファイル
+
+- `watch-figma.sh` — Figmaの起動状態を監視するスクリプト
+- `~/Library/LaunchAgents/com.terada.figma-link-watcher.plist` — launchd エージェント設定
 
 ## ファイル構成
 
-- `FigmaLink.swift` — メニューバーアプリのソース
+- `FigmaLink.swift` — メニューバーアプリのソース（Figmaアプリの起動・終了イベント監視機能搭載）
 - `figma-link-menu` — コンパイル済みバイナリ
+- `watch-figma.sh` — Figmaの起動状態を定期監視するスクリプト
 
-CLIラッパーは `functions/figma-link` にある。
+CLIラッパーは `~/.dotfiles/functions/figma-link` にある。
 
 ## ビルド
 
@@ -101,6 +104,20 @@ swiftc -o figma-link-menu FigmaLink.swift -framework Cocoa
 
 ## 仕組み
 
+### クリップボード監視（メニューバーアプリ）
+
 - `NSPasteboard.general.changeCount`（整数カウンタ）を1秒間隔でチェック
 - 変化があった場合のみクリップボード内容を読み取り、Figma定型文パターンに一致するか判定
 - 一致した場合にダイアログを表示し、ユーザーの選択に応じてクリーニング
+
+### Figmaアプリ起動・終了の自動検知
+
+- `NSWorkspace.didLaunchApplicationNotification` / `didTerminateApplicationNotification` でイベント監視
+- Figmaアプリ（Bundle ID: `com.figma.Desktop`）の起動・終了を検知
+- 起動時 → 監視開始、終了時 → 監視停止（メニューバーアプリの制御）
+
+### 自動起動スクリプト（launchd 監視）
+
+- `watch-figma.sh` が10秒ごとにFigmaの起動状態をチェック
+- Figmaが起動していて figma-link が停止中 → `figma-link start` を実行
+- Figmaが停止していて figma-link が起動中 → `figma-link stop` を実行
