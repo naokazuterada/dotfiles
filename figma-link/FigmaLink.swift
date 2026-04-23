@@ -88,7 +88,7 @@ class FigmaLinkController: NSObject, NSApplicationDelegate {
             statusMenuItem.title = "● 監視中"
             toggleMenuItem.title = "監視停止"
         } else {
-            statusItem.button?.title = "Fig✕"
+            statusItem.button?.title = "(Fig)"
             statusMenuItem.title = "○ 停止中"
             toggleMenuItem.title = "監視開始"
         }
