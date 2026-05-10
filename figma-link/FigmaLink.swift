@@ -30,6 +30,12 @@ class FigmaLinkController: NSObject, NSApplicationDelegate {
 
         menu.addItem(NSMenuItem.separator())
 
+        let openFolderItem = NSMenuItem(title: "「figma-link」のソースを開く", action: #selector(openFolder), keyEquivalent: "")
+        openFolderItem.target = self
+        menu.addItem(openFolderItem)
+
+        menu.addItem(NSMenuItem.separator())
+
         let quitItem = NSMenuItem(title: "終了", action: #selector(quit), keyEquivalent: "q")
         quitItem.target = self
         menu.addItem(quitItem)
@@ -163,6 +169,11 @@ class FigmaLinkController: NSObject, NSApplicationDelegate {
         NSWorkspace.shared.runningApplications.contains { app in
             app.bundleIdentifier == FIGMA_BUNDLE_ID
         }
+    }
+
+    @objc func openFolder() {
+        let url = URL(fileURLWithPath: NSString(string: "~/.dotfiles/figma-link").expandingTildeInPath)
+        NSWorkspace.shared.open(url)
     }
 
     @objc func quit() {
