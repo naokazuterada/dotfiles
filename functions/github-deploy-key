@@ -39,6 +39,7 @@ while true; do
   SELECTED=$(printf '%s\n' \
     "公開鍵 (ssh_key.pub) … デプロイ先サーバーの ~/.ssh/authorized_keys に追記" \
     "秘密鍵 (ssh_key) … GitHub Secrets の SSH_KEY に登録" \
+    "KNOWN_HOSTS を検索してコピー … GitHub Secrets の KNOWN_HOSTS に登録" \
     "終了（ファイルを削除）" \
     | fzf --height 40% --reverse --header "GitHub Actions用 鍵のコピー")
 
@@ -50,6 +51,15 @@ while true; do
     秘密鍵*)
       pbcopy < "$KEY_FILE"
       echo "[コピー] 秘密鍵をクリップボードにコピーしました → GitHub Secrets の SSH_KEY に登録"
+      ;;
+    KNOWN_HOSTS*)
+      # 別関数 known-hosts-search に委譲（~/.ssh/known_hosts を検索してコピー）
+      # デプロイ先へ一度SSH接続して known_hosts にエントリが追加されている必要がある
+      if command -v known-hosts-search >/dev/null 2>&1; then
+        known-hosts-search "$PROJECT_NAME"
+      else
+        echo "[警告] known-hosts-search が見つかりません" >&2
+      fi
       ;;
     終了* | "")
       echo "終了します（一時ファイルを削除しました）"
