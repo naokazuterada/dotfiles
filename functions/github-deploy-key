@@ -1,0 +1,59 @@
+#!/bin/bash
+# GitHub Actions用 SSHキー生成ヘルパー（karappo/github-deploy 用）
+# プロジェクト名を入力するとデプロイ用のRSAキーペアを生成し、
+# 公開鍵・秘密鍵をfzfで選んでクリップボードにコピーできる。
+# 終了時（Ctrl-C含む）に生成した一時ファイルは自動削除される。
+# 手順: https://github.com/karappo/github-deploy
+
+# プロジェクト名の入力
+echo -n "プロジェクト名 (project_name): "
+read -r PROJECT_NAME
+if [ -z "$PROJECT_NAME" ]; then
+  echo "キャンセルしました"
+  exit 0
+fi
+
+# 一時ディレクトリに鍵を生成（終了時に必ず削除）
+WORK_DIR=$(mktemp -d "${TMPDIR:-/tmp}/gha-ssh-key.XXXXXX")
+KEY_FILE="$WORK_DIR/ssh_key"
+
+cleanup() {
+  rm -rf "$WORK_DIR"
+}
+trap cleanup EXIT INT TERM
+
+# RSA 4096bit キーを生成
+if ! ssh-keygen -t rsa -b 4096 -f "$KEY_FILE" -C "${PROJECT_NAME}@github-actions" -N "" >/dev/null; then
+  echo "エラー: 鍵の生成に失敗しました" >&2
+  exit 1
+fi
+
+echo ""
+echo "=== 鍵を生成しました (${PROJECT_NAME}@github-actions) ==="
+echo "コピーする鍵を選択してください（終了するまで一時ファイルは保持されます）"
+echo ""
+
+# fzfで鍵を選んでクリップボードにコピー（ループ）
+# 名称・登録先は karappo/github-deploy のセットアップ手順に揃えている
+while true; do
+  SELECTED=$(printf '%s\n' \
+    "公開鍵 (ssh_key.pub) … デプロイ先サーバーの ~/.ssh/authorized_keys に追記" \
+    "秘密鍵 (ssh_key) … GitHub Secrets の SSH_KEY に登録" \
+    "終了（ファイルを削除）" \
+    | fzf --height 40% --reverse --header "GitHub Actions用 鍵のコピー")
+
+  case "$SELECTED" in
+    公開鍵*)
+      pbcopy < "${KEY_FILE}.pub"
+      echo "[コピー] 公開鍵をクリップボードにコピーしました → authorized_keys に追記"
+      ;;
+    秘密鍵*)
+      pbcopy < "$KEY_FILE"
+      echo "[コピー] 秘密鍵をクリップボードにコピーしました → GitHub Secrets の SSH_KEY に登録"
+      ;;
+    終了* | "")
+      echo "終了します（一時ファイルを削除しました）"
+      break
+      ;;
+  esac
+done
