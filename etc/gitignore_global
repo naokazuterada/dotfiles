@@ -16,3 +16,5 @@ vendor/bin
 .claude/settings.local.json
 .claude/local/
 .claude/worktrees/
+
+**/.claude/.cc-writes/
