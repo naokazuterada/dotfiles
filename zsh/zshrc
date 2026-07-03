@@ -53,6 +53,7 @@ alias dot='dotfiles'
 alias ops='cd ~/Documents/ops'
 alias wp-themes='cd ./wp/wp-content/themes'
 alias a='cd ~/アプリケーション'
+alias claude-skills='cd ~/.claude/skills'
 
 # open XXX
 alias od='open ~/Desktop'
