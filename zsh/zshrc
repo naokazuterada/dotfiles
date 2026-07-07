@@ -346,3 +346,13 @@ export PATH="$HOME/.local/bin:$PATH"
 
 alias claude-mem='/Users/terada/.bun/bin/bun "/Users/terada/.claude/plugins/marketplaces/thedotmack/plugin/scripts/worker-service.cjs"'
 alias claude-config='cd ~/.claude-config'
+
+# iTerm2の Shell Integration をインストールしていれば、
+# メニューの Edit → Select Output of Last Command(⇧⌘A)で直前のコマンドの出力だけを一発選択できます。
+# そのまま⌘Cでコピーできます。
+test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell_integration.zsh"
+
+# コマンドの実行結果をクリップボードに
+# 使い方：
+# ./example.sh C
+alias -g C='| tee >(pbcopy)'
