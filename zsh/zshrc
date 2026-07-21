@@ -55,6 +55,7 @@ alias wp-themes='cd ./wp/wp-content/themes'
 alias a='cd ~/アプリケーション'
 alias claude-skills='cd ~/.claude/skills'
 alias kakeibo='cd ~/アプリケーション/kakeibo'
+alias kintai-audit='cd ~/.claude/skills/kintai-audit'
 
 # open XXX
 alias od='open ~/Desktop'
