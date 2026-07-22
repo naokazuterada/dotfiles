@@ -63,6 +63,11 @@ alias odot='open ~/Sites'
 alias os='open ~/Sites'
 alias kindle2pdf='cd ~/Applications/kindle2pdf && open .'
 
+# 指定ディレクトリ（省略時はカレント）を作業ディレクトリにしてiTermの新規ウィンドウを開く
+iterm() {
+  open -a iTerm "${1:-.}"
+}
+
 alias htpasswd='$HOME/.dotfiles/functions/htpasswd'
 
 # Local IP address
