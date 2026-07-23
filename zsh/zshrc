@@ -61,7 +61,7 @@ alias kintai-audit='cd ~/.claude/skills/kintai-audit'
 alias od='open ~/Desktop'
 alias odot='open ~/Sites'
 alias os='open ~/Sites'
-alias kindle2pdf='cd ~/Applications/kindle2pdf && open .'
+alias kindle2pdf='cd ~/アプリケーション/kindle2pdf && open .'
 
 # 指定ディレクトリ（省略時はカレント）を作業ディレクトリにしてiTermの新規ウィンドウを開く
 iterm() {
