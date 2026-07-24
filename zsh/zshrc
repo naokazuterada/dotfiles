@@ -75,6 +75,9 @@ alias htpasswd='$HOME/.dotfiles/functions/htpasswd'
 alias ip='networksetup -listallhardwareports | peco | perl -pe "s/Device: (en[0-9]+)/\1/g;" | xargs ipconfig getifaddr'
 
 # 指定ディレクトリ（省略時はカレント）をVSCodeとForkで開く
+# Zprezto の utility モジュールが `alias o='open'` を定義しているため、
+# 関数定義前にエイリアスを解除する（残っているとパースエラーになる）
+unalias o 2>/dev/null
 o() {
   code "${1:-.}" && open -a Fork "${1:-.}"
 }
