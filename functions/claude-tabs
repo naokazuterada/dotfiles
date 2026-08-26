@@ -15,7 +15,7 @@
 # Usage:
 #   claude-tabs [分数]                直近N分(既定120)のタブを fzf で選んで復元する
 #   claude-tabs [分数] --list         一覧を表示するだけ（選択 UI を出さない）
-#   claude-tabs [分数] --open         全件を iTerm2 に開き、復帰コマンドを入力する（実行はしない）
+#   claude-tabs [分数] --open         全件を iTerm2 に cd 済みで開く（claude は入力のみ・実行しない）
 #   claude-tabs [分数] --run          --open に加えて Enter まで押す
 #   claude-tabs [分数] --claude-only  claude セッションのタブだけを対象にする
 #   claude-tabs [分数] --no-fzf       fzf を使わず番号入力で選ぶ
@@ -23,7 +23,7 @@
 # fzf 画面のキー操作:
 #   ↑↓ / Ctrl-J,K   カーソル移動（右下にセッションの中身をプレビュー）
 #   Tab             複数選択（Shift-Tab で解除）
-#   Enter           選んだタブを開く（コマンドを入力するだけ。実行はしない）
+#   Enter           選んだタブを開く（cd 済み。claude --resume は入力だけで実行しない）
 #   Ctrl-X          選んだタブを開いて Enter まで押す
 #   Ctrl-T          対象時間を切り替え（30→60→120→240→480→1440分→…）
 #   Ctrl-O          claude セッションのみ ⇔ 全部 を切り替え
@@ -121,15 +121,17 @@ open_rows() {
   local -a target=("$@")
   local newline_opt="newline no"
   (( autorun )) && newline_opt="newline yes"
-  local line kind cwd sid cmd
+  local line kind cwd sid cwd_q resume_line
   for line in $target; do
     kind=${${(s:	:)line}[2]}
     cwd=${${(s:	:)line}[3]}
     sid=${${(s:	:)line}[4]}
+    cwd_q=${(qq)cwd}
+    # cd はタブを開いた時点で実行し、claude の復帰コマンドは入力だけして残す
     if [[ $kind == claude ]]; then
-      cmd="cd ${cwd} && claude --resume ${sid}"
+      resume_line="write text \"claude --resume ${sid}\" ${newline_opt}"
     else
-      cmd="cd ${cwd}"
+      resume_line=""
     fi
     /usr/bin/osascript <<EOF
 tell application "iTerm2"
@@ -140,15 +142,17 @@ tell application "iTerm2"
     tell current window to create tab with default profile
   end if
   tell current session of current window
-    write text "${cmd}" ${newline_opt}
+    delay 0.2
+    write text "cd ${cwd_q}" newline yes
+    ${resume_line}
   end tell
 end tell
 EOF
   done
   if (( autorun )); then
-    print "\n${#target} 個のタブを開いて実行しました"
+    print "\n${#target} 個のタブを cd 済みで開き、claude を起動しました"
   else
-    print "\n${#target} 個のタブを開きました（コマンドを入力しただけなので、確認してから Enter）"
+    print "\n${#target} 個のタブを cd 済みで開きました（claude の復帰コマンドは入力だけなので、確認してから Enter）"
   fi
 }
 
