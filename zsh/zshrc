@@ -370,3 +370,20 @@ test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell
 alias -g C='| tee >(pbcopy)'
 
 alias kamal='docker run -it --rm -v "${PWD}:/workdir" -v /run/host-services/ssh-auth.sock:/run/host-services/ssh-auth.sock -e SSH_AUTH_SOCK=/run/host-services/ssh-auth.sock -v /var/run/docker.sock:/var/run/docker.sock ghcr.io/basecamp/kamal:latest'
+
+# iTerm2の各タブがどのディレクトリで作業していたかを記録する
+# MAMP起因のカーネルパニックで落ちた際、iTerm2 のセッション復元は効かない
+# （restorable-state.sqlite は正常終了時にしか書かれない）ため、自前で記録しておく。
+# 復元は `claude-tabs` コマンドで行う（functions/claude-tabs）。
+zmodload -i zsh/datetime
+autoload -Uz add-zsh-hook
+_iterm_tab_log() {
+  [[ -n $ITERM_SESSION_ID ]] || return
+  # 同じディレクトリの連続記録は5分に1回までに間引く（ログ肥大化の防止）
+  [[ $PWD == "$_ITERM_TAB_LOG_PWD" && $(( EPOCHSECONDS - ${_ITERM_TAB_LOG_AT:-0} )) -lt 300 ]] && return
+  _ITERM_TAB_LOG_PWD=$PWD
+  _ITERM_TAB_LOG_AT=$EPOCHSECONDS
+  print -r -- "$EPOCHSECONDS	$ITERM_SESSION_ID	$PWD" >> ~/.iterm-tabs.log
+}
+add-zsh-hook chpwd  _iterm_tab_log
+add-zsh-hook precmd _iterm_tab_log

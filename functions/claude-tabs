@@ -1,0 +1,143 @@
+#!/usr/bin/env zsh
+#
+# claude-tabs — クラッシュ直前に開いていた iTerm2 タブを一覧/復元する
+#
+# macOS がカーネルパニックで落ちると iTerm2 のセッション復元は効かない
+# （restorable-state.sqlite は正常終了時にしか書かれないため）。
+# そこで以下の2つの記録から「落ちる直前に開いていたタブ」を再構成する。
+#
+#   1. ~/.claude/projects/**/<session-id>.jsonl
+#      mtime = 最後にやり取りした時刻 / 中の "cwd" = claude の実行ディレクトリ
+#      ファイル名 = セッションID（claude --resume に渡せる）
+#   2. ~/.iterm-tabs.log  （zshrc の precmd/chpwd フックが記録）
+#      claude を起動していないタブの作業ディレクトリ
+#
+# Usage:
+#   claude-tabs [分数]                直近N分(既定120)に活動していたタブを一覧
+#   claude-tabs [分数] --open         iTerm2 にタブを開き、復帰コマンドを入力する（実行はしない）
+#   claude-tabs [分数] --run          --open に加えて Enter まで押す
+#   claude-tabs [分数] --claude-only  claude セッションのタブだけを対象にする
+#
+# Example:
+#   claude-tabs 60          # 直近1時間ぶんを確認
+#   claude-tabs 60 --open   # 確認してから自分で Enter を押す（推奨）
+
+emulate -L zsh
+setopt null_glob
+
+local TABLOG=${CLAUDE_TABS_LOG:-~/.iterm-tabs.log}
+local mins=120 mode=list claude_only=0
+
+for a in "$@"; do
+  case "$a" in
+    --open)        mode=open ;;
+    --run)         mode=run ;;
+    --claude-only) claude_only=1 ;;
+    <->)           mins=$a ;;
+    -h|--help)     sed -n '3,26p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+    *) print -u2 "usage: claude-tabs [分数] [--open|--run] [--claude-only]"; exit 1 ;;
+  esac
+done
+
+# rows の形式: mtime<TAB>種別<TAB>cwd<TAB>セッションID<TAB>jsonlパス
+local -a rows
+local -A seen_cwd
+local f cwd sid mtime line
+
+# --- 1. claude セッション ---
+for f in ${(f)"$(find ~/.claude/projects -name '*.jsonl' -mmin -$mins 2>/dev/null)"}; do
+  cwd=$(grep -o '"cwd":"[^"]*"' "$f" 2>/dev/null | tail -1 | cut -d'"' -f4)
+  [[ -z $cwd || ! -d $cwd ]] && continue
+  [[ $cwd == *claude-mem* ]] && continue   # claude-mem の内部セッションはタブではない
+  rows+=("$(stat -f %m "$f")	claude	$cwd	${${f:t}:r}	$f")
+done
+
+# --- 2. シェルのみのタブ（フックのログ）---
+if (( ! claude_only )) && [[ -f $TABLOG ]]; then
+  local -A shell_at shell_cwd
+  local since=$(( $(date +%s) - mins * 60 ))
+  local ts sess pwd_ uuid
+  while IFS=$'\t' read -r ts sess pwd_; do
+    [[ -z $ts || $ts -lt $since || ! -d $pwd_ ]] && continue
+    uuid=${sess##*:}          # w0t1p0:UUID → UUID（番号部分は再起動で使い回されるため）
+    shell_at[$uuid]=$ts
+    shell_cwd[$uuid]=$pwd_
+  done < $TABLOG
+  for uuid in ${(k)shell_at}; do
+    rows+=("${shell_at[$uuid]}	shell	${shell_cwd[$uuid]}	-	-")
+  done
+fi
+
+# --- 新しい順に並べ、同一ディレクトリは最新の1件だけ残す（= タブ1つ）---
+local -a picked
+for line in ${(On)rows}; do
+  cwd=${${(s:	:)line}[3]}
+  [[ -n ${seen_cwd[$cwd]} ]] && continue
+  seen_cwd[$cwd]=1
+  picked+=("$line")
+done
+
+if (( ${#picked} == 0 )); then
+  print "直近 ${mins} 分に活動していたタブは見つかりませんでした"
+  exit 0
+fi
+
+# --- 一覧表示 ---
+print "=== 直近 ${mins} 分に活動していたタブ (${#picked} 件) ==="
+local kind first
+for line in $picked; do
+  mtime=${${(s:	:)line}[1]}
+  kind=${${(s:	:)line}[2]}
+  cwd=${${(s:	:)line}[3]}
+  sid=${${(s:	:)line}[4]}
+  f=${${(s:	:)line}[5]}
+  printf '[%-6s] %s  %s\n' "$kind" "$(date -r $mtime '+%m/%d %H:%M')" "${cwd/#$HOME/~}"
+  if [[ $kind == claude ]]; then
+    printf '           claude --resume %s\n' "$sid"
+    # そのセッションが何の作業だったか分かるよう、最初のプロンプトを表示する
+    first=$(head -100 "$f" 2>/dev/null \
+      | jq -r 'select(.type=="user" and (.isMeta != true)) | .message.content
+               | if type=="string" then . else (map(select(.type=="text").text) | join(" ")) end' 2>/dev/null \
+      | grep -v '^[[:space:]]*$' | grep -v '^<' | head -1 | tr '\n' ' ' | cut -c1-70)
+    [[ -n $first ]] && printf '           └ %s\n' "$first"
+  fi
+done
+
+# --- ログを30日ぶんに切り詰める ---
+if [[ -f $TABLOG ]]; then
+  local keep=$(( $(date +%s) - 30 * 86400 ))
+  awk -F'\t' -v k=$keep '$1 >= k' $TABLOG > $TABLOG.tmp 2>/dev/null && mv $TABLOG.tmp $TABLOG
+fi
+
+[[ $mode == list ]] && exit 0
+
+# --- iTerm2 にタブを復元 ---
+local newline_opt="newline no"
+[[ $mode == run ]] && newline_opt="newline yes"
+
+local cmd
+for line in $picked; do
+  kind=${${(s:	:)line}[2]}
+  cwd=${${(s:	:)line}[3]}
+  sid=${${(s:	:)line}[4]}
+  if [[ $kind == claude ]]; then
+    cmd="cd ${cwd} && claude --resume ${sid}"
+  else
+    cmd="cd ${cwd}"
+  fi
+  /usr/bin/osascript <<EOF
+tell application "iTerm2"
+  activate
+  if (count of windows) = 0 then
+    create window with default profile
+  else
+    tell current window to create tab with default profile
+  end if
+  tell current session of current window
+    write text "${cmd}" ${newline_opt}
+  end tell
+end tell
+EOF
+done
+
+print "\n${#picked} 個のタブを開きました（--run 以外はコマンドを入力しただけなので、確認してから Enter）"
