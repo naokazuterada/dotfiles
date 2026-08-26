@@ -144,7 +144,7 @@ EOF
 trim_log() {
   [[ -f $TABLOG ]] || return 0
   local keep=$(( $(date +%s) - 30 * 86400 ))
-  awk -F'\t' -v k=$keep '$1 >= k' $TABLOG > $TABLOG.tmp 2>/dev/null && mv $TABLOG.tmp $TABLOG
+  awk -F'\t' -v k=$keep '$1 >= k' $TABLOG >| $TABLOG.tmp 2>/dev/null && mv $TABLOG.tmp $TABLOG
 }
 
 # ==========================================================================

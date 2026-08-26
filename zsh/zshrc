@@ -383,7 +383,7 @@ _iterm_tab_log() {
   [[ $PWD == "$_ITERM_TAB_LOG_PWD" && $(( EPOCHSECONDS - ${_ITERM_TAB_LOG_AT:-0} )) -lt 300 ]] && return
   _ITERM_TAB_LOG_PWD=$PWD
   _ITERM_TAB_LOG_AT=$EPOCHSECONDS
-  print -r -- "$EPOCHSECONDS	$ITERM_SESSION_ID	$PWD" >> ~/.iterm-tabs.log
+  print -r -- "$EPOCHSECONDS	$ITERM_SESSION_ID	$PWD" >>| ~/.iterm-tabs.log
 }
 add-zsh-hook chpwd  _iterm_tab_log
 add-zsh-hook precmd _iterm_tab_log
