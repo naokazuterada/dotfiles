@@ -54,6 +54,11 @@ if ! type peco >/dev/null 2>&1; then
   brew install peco
 fi
 
+if ! type fzf >/dev/null 2>&1; then
+  info "Install fzf"
+  brew install fzf
+fi
+
 if ! type jq >/dev/null 2>&1; then
   info "Install jq"
   brew install jq

@@ -13,119 +13,125 @@
 #      claude を起動していないタブの作業ディレクトリ
 #
 # Usage:
-#   claude-tabs [分数]                直近N分(既定120)に活動していたタブを一覧
-#   claude-tabs [分数] --open         iTerm2 にタブを開き、復帰コマンドを入力する（実行はしない）
+#   claude-tabs [分数]                直近N分(既定120)のタブを fzf で選んで復元する
+#   claude-tabs [分数] --list         一覧を表示するだけ（選択 UI を出さない）
+#   claude-tabs [分数] --open         全件を iTerm2 に開き、復帰コマンドを入力する（実行はしない）
 #   claude-tabs [分数] --run          --open に加えて Enter まで押す
 #   claude-tabs [分数] --claude-only  claude セッションのタブだけを対象にする
+#   claude-tabs [分数] --no-fzf       fzf を使わず番号入力で選ぶ
+#
+# fzf 画面のキー操作:
+#   ↑↓ / Ctrl-J,K   カーソル移動（右下にセッションの中身をプレビュー）
+#   Tab             複数選択（Shift-Tab で解除）
+#   Enter           選んだタブを開く（コマンドを入力するだけ。実行はしない）
+#   Ctrl-X          選んだタブを開いて Enter まで押す
+#   Ctrl-T          対象時間を切り替え（30→60→120→240→480→1440分→…）
+#   Ctrl-O          claude セッションのみ ⇔ 全部 を切り替え
+#   Ctrl-R          再読み込み
+#   ESC             中止
 #
 # Example:
-#   claude-tabs 60          # 直近1時間ぶんを確認
-#   claude-tabs 60 --open   # 確認してから自分で Enter を押す（推奨）
+#   claude-tabs 60          # 直近1時間ぶんから選ぶ
+#   claude-tabs 240 --list  # 直近4時間ぶんを一覧するだけ
 
 emulate -L zsh
-setopt null_glob
+setopt null_glob extended_glob
 
+local SELF=${0:A}
 local TABLOG=${CLAUDE_TABS_LOG:-~/.iterm-tabs.log}
-local mins=120 mode=list claude_only=0
+local mins=120 mode=auto claude_only=0 autorun=0 use_fzf=1
+local -a TIME_PRESETS=(30 60 120 240 480 1440)
 
-for a in "$@"; do
-  case "$a" in
-    --open)        mode=open ;;
-    --run)         mode=run ;;
-    --claude-only) claude_only=1 ;;
-    <->)           mins=$a ;;
-    -h|--help)     sed -n '3,26p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
-    *) print -u2 "usage: claude-tabs [分数] [--open|--run] [--claude-only]"; exit 1 ;;
-  esac
-done
+# picked の形式: mtime<TAB>種別<TAB>cwd<TAB>セッションID<TAB>jsonlパス
+typeset -ga picked
 
-# rows の形式: mtime<TAB>種別<TAB>cwd<TAB>セッションID<TAB>jsonlパス
-local -a rows
-local -A seen_cwd
-local f cwd sid mtime line
+# --- 対象タブを集める（mins / claude_only を見て picked を作り直す）---
+scan_tabs() {
+  picked=()
+  local -a rows
+  local -A seen_cwd
+  local f cwd line
 
-# --- 1. claude セッション ---
-for f in ${(f)"$(find ~/.claude/projects -name '*.jsonl' -mmin -$mins 2>/dev/null)"}; do
-  cwd=$(grep -o '"cwd":"[^"]*"' "$f" 2>/dev/null | tail -1 | cut -d'"' -f4)
-  [[ -z $cwd || ! -d $cwd ]] && continue
-  [[ $cwd == *claude-mem* ]] && continue   # claude-mem の内部セッションはタブではない
-  rows+=("$(stat -f %m "$f")	claude	$cwd	${${f:t}:r}	$f")
-done
-
-# --- 2. シェルのみのタブ（フックのログ）---
-if (( ! claude_only )) && [[ -f $TABLOG ]]; then
-  local -A shell_at shell_cwd
-  local since=$(( $(date +%s) - mins * 60 ))
-  local ts sess pwd_ uuid
-  while IFS=$'\t' read -r ts sess pwd_; do
-    [[ -z $ts || $ts -lt $since || ! -d $pwd_ ]] && continue
-    uuid=${sess##*:}          # w0t1p0:UUID → UUID（番号部分は再起動で使い回されるため）
-    shell_at[$uuid]=$ts
-    shell_cwd[$uuid]=$pwd_
-  done < $TABLOG
-  for uuid in ${(k)shell_at}; do
-    rows+=("${shell_at[$uuid]}	shell	${shell_cwd[$uuid]}	-	-")
+  # 1. claude セッション
+  for f in ${(f)"$(find ~/.claude/projects -name '*.jsonl' -mmin -$mins 2>/dev/null)"}; do
+    cwd=$(grep -o '"cwd":"[^"]*"' "$f" 2>/dev/null | tail -1 | cut -d'"' -f4)
+    [[ -z $cwd || ! -d $cwd ]] && continue
+    [[ $cwd == *claude-mem* ]] && continue   # claude-mem の内部セッションはタブではない
+    rows+=("$(stat -f %m "$f")	claude	$cwd	${${f:t}:r}	$f")
   done
-fi
 
-# --- 新しい順に並べ、同一ディレクトリは最新の1件だけ残す（= タブ1つ）---
-local -a picked
-for line in ${(On)rows}; do
-  cwd=${${(s:	:)line}[3]}
-  [[ -n ${seen_cwd[$cwd]} ]] && continue
-  seen_cwd[$cwd]=1
-  picked+=("$line")
-done
-
-if (( ${#picked} == 0 )); then
-  print "直近 ${mins} 分に活動していたタブは見つかりませんでした"
-  exit 0
-fi
-
-# --- 一覧表示 ---
-print "=== 直近 ${mins} 分に活動していたタブ (${#picked} 件) ==="
-local kind first
-for line in $picked; do
-  mtime=${${(s:	:)line}[1]}
-  kind=${${(s:	:)line}[2]}
-  cwd=${${(s:	:)line}[3]}
-  sid=${${(s:	:)line}[4]}
-  f=${${(s:	:)line}[5]}
-  printf '[%-6s] %s  %s\n' "$kind" "$(date -r $mtime '+%m/%d %H:%M')" "${cwd/#$HOME/~}"
-  if [[ $kind == claude ]]; then
-    printf '           claude --resume %s\n' "$sid"
-    # そのセッションが何の作業だったか分かるよう、最初のプロンプトを表示する
-    first=$(head -100 "$f" 2>/dev/null \
-      | jq -r 'select(.type=="user" and (.isMeta != true)) | .message.content
-               | if type=="string" then . else (map(select(.type=="text").text) | join(" ")) end' 2>/dev/null \
-      | grep -v '^[[:space:]]*$' | grep -v '^<' | head -1 | tr '\n' ' ' | cut -c1-70)
-    [[ -n $first ]] && printf '           └ %s\n' "$first"
+  # 2. シェルのみのタブ（フックのログ）
+  if (( ! claude_only )) && [[ -f $TABLOG ]]; then
+    local -A shell_at shell_cwd
+    local since=$(( $(date +%s) - mins * 60 ))
+    local ts sess pwd_ uuid
+    while IFS=$'\t' read -r ts sess pwd_; do
+      [[ -z $ts || $ts -lt $since || ! -d $pwd_ ]] && continue
+      uuid=${sess##*:}          # w0t1p0:UUID → UUID（番号部分は再起動で使い回されるため）
+      shell_at[$uuid]=$ts
+      shell_cwd[$uuid]=$pwd_
+    done < $TABLOG
+    for uuid in ${(k)shell_at}; do
+      rows+=("${shell_at[$uuid]}	shell	${shell_cwd[$uuid]}	-	-")
+    done
   fi
-done
 
-# --- ログを30日ぶんに切り詰める ---
-if [[ -f $TABLOG ]]; then
-  local keep=$(( $(date +%s) - 30 * 86400 ))
-  awk -F'\t' -v k=$keep '$1 >= k' $TABLOG > $TABLOG.tmp 2>/dev/null && mv $TABLOG.tmp $TABLOG
-fi
+  # 新しい順に並べ、同一ディレクトリは最新の1件だけ残す（= タブ1つ）
+  for line in ${(On)rows}; do
+    cwd=${${(s:	:)line}[3]}
+    [[ -n ${seen_cwd[$cwd]} ]] && continue
+    seen_cwd[$cwd]=1
+    picked+=("$line")
+  done
+}
 
-[[ $mode == list ]] && exit 0
+# --- そのセッションが何の作業だったか分かるよう、最初のユーザー発言を拾う ---
+first_prompt() {
+  local f=$1 n=${2:-1}
+  head -200 "$f" 2>/dev/null \
+    | jq -r 'select(.type=="user" and (.isMeta != true)) | .message.content
+             | if type=="string" then . else (map(select(.type=="text").text) | join(" ")) end' 2>/dev/null \
+    | grep -v '^[[:space:]]*$' | grep -v '^<' | head -$n | tr '\t\n' '  '
+}
 
-# --- iTerm2 にタブを復元 ---
-local newline_opt="newline no"
-[[ $mode == run ]] && newline_opt="newline yes"
+# --- 一覧表示（--list / --open / --run 用）---
+print_list() {
+  local line kind cwd sid f mtime first label=""
+  local i=0
+  (( claude_only )) && label=" / claude のみ"
+  print "=== 直近 ${mins} 分に活動していたタブ (${#picked} 件)${label} ==="
+  for line in $picked; do
+    (( i++ ))
+    mtime=${${(s:	:)line}[1]}
+    kind=${${(s:	:)line}[2]}
+    cwd=${${(s:	:)line}[3]}
+    sid=${${(s:	:)line}[4]}
+    f=${${(s:	:)line}[5]}
+    printf '%2d) [%-6s] %s  %s\n' $i "$kind" "$(date -r $mtime '+%m/%d %H:%M')" "${cwd/#$HOME/~}"
+    if [[ $kind == claude ]]; then
+      printf '      claude --resume %s\n' "$sid"
+      first=$(first_prompt "$f" | cut -c1-70)
+      [[ -n $first ]] && printf '      └ %s\n' "$first"
+    fi
+  done
+}
 
-local cmd
-for line in $picked; do
-  kind=${${(s:	:)line}[2]}
-  cwd=${${(s:	:)line}[3]}
-  sid=${${(s:	:)line}[4]}
-  if [[ $kind == claude ]]; then
-    cmd="cd ${cwd} && claude --resume ${sid}"
-  else
-    cmd="cd ${cwd}"
-  fi
-  /usr/bin/osascript <<EOF
+# --- iTerm2 にタブを復元（引数は picked と同じ形式の行）---
+open_rows() {
+  local -a target=("$@")
+  local newline_opt="newline no"
+  (( autorun )) && newline_opt="newline yes"
+  local line kind cwd sid cmd
+  for line in $target; do
+    kind=${${(s:	:)line}[2]}
+    cwd=${${(s:	:)line}[3]}
+    sid=${${(s:	:)line}[4]}
+    if [[ $kind == claude ]]; then
+      cmd="cd ${cwd} && claude --resume ${sid}"
+    else
+      cmd="cd ${cwd}"
+    fi
+    /usr/bin/osascript <<EOF
 tell application "iTerm2"
   activate
   if (count of windows) = 0 then
@@ -138,6 +144,273 @@ tell application "iTerm2"
   end tell
 end tell
 EOF
+  done
+  if (( autorun )); then
+    print "\n${#target} 個のタブを開いて実行しました"
+  else
+    print "\n${#target} 個のタブを開きました（コマンドを入力しただけなので、確認してから Enter）"
+  fi
+}
+
+# --- ログを30日ぶんに切り詰める ---
+trim_log() {
+  [[ -f $TABLOG ]] || return 0
+  local keep=$(( $(date +%s) - 30 * 86400 ))
+  awk -F'\t' -v k=$keep '$1 >= k' $TABLOG > $TABLOG.tmp 2>/dev/null && mv $TABLOG.tmp $TABLOG
+}
+
+# ==========================================================================
+# fzf 用の内部サブコマンド（fzf の reload/preview から自分自身を呼び出す）
+# 状態（対象分数・claude のみか）は一時ファイルで受け渡しする
+# ==========================================================================
+read_state() {
+  local m c
+  IFS=' ' read -r m c < $1 2>/dev/null
+  [[ $m == <-> ]] && mins=$m
+  [[ $c == <-> ]] && claude_only=$c
+}
+write_state() { print -r -- "$mins $claude_only" >| $1 }
+
+# 一覧を fzf に流す行を出力する
+#   1:mtime 2:種別 3:cwd 4:セッションID 5:jsonl 6:画面表示用
+rows_out() {
+  read_state $1
+  scan_tabs
+  local C_KIND=$'\033[36m' C_DIM=$'\033[2m' C_OFF=$'\033[0m'
+  local line kind cwd sid f mtime first badge disp
+  for line in $picked; do
+    mtime=${${(s:	:)line}[1]}
+    kind=${${(s:	:)line}[2]}
+    cwd=${${(s:	:)line}[3]}
+    sid=${${(s:	:)line}[4]}
+    f=${${(s:	:)line}[5]}
+    if [[ $kind == claude ]]; then
+      badge="${C_KIND}[claude]${C_OFF}"
+      first=$(first_prompt "$f" | cut -c1-60)
+    else
+      badge="${C_DIM}[shell ]${C_OFF}"
+      first=""
+    fi
+    disp="${badge} ${C_DIM}$(date -r $mtime '+%m/%d %H:%M')${C_OFF}  ${cwd/#$HOME/~}"
+    [[ -n $first ]] && disp+="  ${C_DIM}· ${first}${C_OFF}"
+    print -r -- "${line}	${disp}"
+  done
+}
+
+# fzf のヘッダー（現在の絞り込み条件とキー操作）
+header_out() {
+  read_state $1
+  local target
+  (( claude_only )) && target='claude のみ' || target='claude + shell'
+  print -r -- "直近 ${mins} 分 / ${target}    ※ claude-tabs 240 のように分数を渡して起動もできます"
+  print -r -- "Enter=開く  ^X=開いて実行  Tab=複数選択  ^T=時間切替  ^O=claudeのみ  ^R=再読込  ESC=中止"
+}
+
+# 状態を書き換える（fzf の execute-silent から呼ばれる）
+state_mutate() {
+  local file=$1 op=$2 p
+  read_state $file
+  case $op in
+    cycle)
+      # 現在値より大きい最初のプリセットへ。上限を超えたら先頭に戻る
+      local next=$TIME_PRESETS[1]
+      for p in $TIME_PRESETS; do
+        (( p > mins )) && { next=$p; break }
+      done
+      mins=$next
+      ;;
+    toggle) claude_only=$(( ! claude_only )) ;;
+  esac
+  write_state $file
+}
+
+# fzf のプレビュー（カーソル位置のタブの中身を見せる）
+preview_out() {
+  local mtime=$1 kind=$2 cwd=$3 sid=$4 f=$5
+  local C_HL=$'\033[36m' C_DIM=$'\033[2m' C_OFF=$'\033[0m'
+  print -r -- "${C_HL}${cwd/#$HOME/~}${C_OFF}"
+  print -r -- "${C_DIM}最終アクティブ: $(date -r $mtime '+%Y/%m/%d %H:%M')${C_OFF}"
+  local branch=$(git -C "$cwd" rev-parse --abbrev-ref HEAD 2>/dev/null)
+  [[ -n $branch ]] && print -r -- "${C_DIM}ブランチ: ${branch}${C_OFF}"
+  print
+  if [[ $kind == claude && -f $f ]]; then
+    print -r -- "${C_DIM}\$ claude --resume ${sid}${C_OFF}"
+    print
+    print -r -- "--- このセッションでのやり取り（冒頭） ---"
+    head -200 "$f" 2>/dev/null \
+      | jq -r 'select(.type=="user" and (.isMeta != true)) | .message.content
+               | if type=="string" then . else (map(select(.type=="text").text) | join(" ")) end' 2>/dev/null \
+      | grep -v '^[[:space:]]*$' | grep -v '^<' | head -8 | cut -c1-400 | sed 's/^/• /'
+  else
+    print -r -- "--- ディレクトリの内容 ---"
+    ls -1 "$cwd" 2>/dev/null | head -20
+  fi
+}
+
+# --- 内部サブコマンドのディスパッチ ---
+case "$1" in
+  --_rows)    rows_out "$2"; exit 0 ;;
+  --_header)  header_out "$2"; exit 0 ;;
+  --_state)   state_mutate "$2" "$3"; exit 0 ;;
+  --_preview) preview_out "$2" "$3" "$4" "$5" "$6"; exit 0 ;;
+esac
+
+# --- 引数 ---
+for a in "$@"; do
+  case "$a" in
+    --list)        mode=list ;;
+    --open)        mode=open ;;
+    --run)         mode=run ;;
+    --claude-only) claude_only=1 ;;
+    --no-fzf)      use_fzf=0 ;;
+    <->)           mins=$a ;;
+    -h|--help)     sed -n '3,40p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+    *) print -u2 "usage: claude-tabs [分数] [--list|--open|--run] [--claude-only] [--no-fzf]"; exit 1 ;;
+  esac
 done
 
-print "\n${#picked} 個のタブを開きました（--run 以外はコマンドを入力しただけなので、確認してから Enter）"
+local HINT="ヒント: 分数を渡すと範囲を変えられます（例: claude-tabs 240 → 直近240分）"
+
+# --- fzf でカーソル選択 ---
+run_fzf() {
+  local state=$(mktemp "${TMPDIR:-/tmp}/claude-tabs.XXXXXX") || return 2
+  write_state $state
+  local reload="reload(${SELF} --_rows ${state})+transform-header(${SELF} --_header ${state})"
+  local out rc
+  out=$("$SELF" --_rows "$state" | fzf \
+    --ansi --multi --no-sort \
+    --delimiter=$'\t' --with-nth='6..' --accept-nth='1..5' \
+    --layout=reverse --border --height='90%' --prompt='tab> ' --marker='✓' \
+    --header "$("$SELF" --_header "$state")" \
+    --preview "${SELF} --_preview {1} {2} {3} {4} {5}" \
+    --preview-window='down,55%,wrap,border-top' \
+    --expect=ctrl-x \
+    --bind "ctrl-t:execute-silent(${SELF} --_state ${state} cycle)+${reload}" \
+    --bind "ctrl-o:execute-silent(${SELF} --_state ${state} toggle)+${reload}" \
+    --bind "ctrl-r:${reload}")
+  rc=$?
+  rm -f $state 2>/dev/null
+  (( rc != 0 )) && { print "中止しました"; return 1 }
+
+  local -a lines
+  lines=("${(@f)out}")
+  [[ ${lines[1]} == ctrl-x ]] && autorun=1
+  shift lines
+  lines=(${lines:#})
+  (( ${#lines} == 0 )) && { print "何も選択されませんでした"; return 1 }
+
+  # 選択行は 1..5 が元データ、6 が表示用なので前半だけ取り出す
+  local -a target
+  local line parts
+  for line in $lines; do
+    parts=(${(s:	:)line})
+    target+=("${(j:	:)parts[1,5]}")
+  done
+  open_rows $target
+}
+
+# --- 番号入力で選ぶ（fzf が無い / --no-fzf のときのフォールバック）---
+parse_selection() {
+  local input=$1 total=${#picked}
+  local -a out
+  local tok a b i
+  if [[ $input == (a|all|A) ]]; then
+    for (( i=1; i<=total; i++ )); do out+=$i; done
+    print -r -- "$out"
+    return 0
+  fi
+  for tok in ${(s: :)${input//,/ }}; do
+    [[ -z $tok ]] && continue
+    if [[ $tok == <->-<-> ]]; then
+      a=${tok%%-*}; b=${tok##*-}
+      (( a > b )) && { i=$a; a=$b; b=$i; }
+    elif [[ $tok == <-> ]]; then
+      a=$tok; b=$tok
+    else
+      return 1
+    fi
+    (( a < 1 || b > total )) && return 1
+    for (( i=a; i<=b; i++ )); do out+=$i; done
+  done
+  (( ${#out} == 0 )) && return 1
+  print -r -- "${(u)out}"
+}
+
+run_prompt() {
+  local reply sel newmins c_label x_label i
+  local -a idx words target
+  while true; do
+    scan_tabs
+    if (( ${#picked} == 0 )); then
+      print "直近 ${mins} 分に活動していたタブは見つかりませんでした"
+    else
+      print_list
+    fi
+    print "\n$HINT"
+
+    (( claude_only )) && c_label='解除' || c_label='のみ'
+    (( autorun )) && x_label='ON' || x_label='OFF'
+    printf '\n番号=開く（1 3 / 1-3 / a）  t <分>=範囲変更(現在%s分)  c=claude%s  x=自動実行[%s]  q=終了\n> ' \
+      "$mins" "$c_label" "$x_label"
+    IFS= read -r reply < /dev/tty || { print; return 0; }
+    words=(${=reply})
+
+    case "${words[1]}" in
+      ""|q|quit|exit) return 0 ;;
+      t|time)
+        newmins=${words[2]}
+        if [[ -z $newmins ]]; then
+          printf '何分前までを対象にしますか？ (現在 %s) > ' "$mins"
+          IFS= read -r newmins < /dev/tty || { print; return 0; }
+        fi
+        if [[ $newmins == <-> ]] && (( newmins > 0 )); then
+          mins=$newmins
+        else
+          print -u2 "分数は正の整数で指定してください（例: t 240）"
+        fi
+        print ;;
+      c|claude)  claude_only=$(( ! claude_only )); print ;;
+      x|run)
+        autorun=$(( ! autorun ))
+        (( autorun )) && x_label='ON' || x_label='OFF'
+        print "自動実行を ${x_label} にしました\n" ;;
+      *)
+        if sel=$(parse_selection "$reply"); then
+          target=()
+          for i in ${=sel}; do target+=("$picked[$i]"); done
+          open_rows $target
+          return 0
+        else
+          print -u2 "選択を解釈できませんでした: ${reply}\n"
+        fi ;;
+    esac
+  done
+}
+
+trim_log
+
+# 端末でなければ選択 UI を出さず一覧だけ
+[[ $mode == auto && ! -t 0 ]] && mode=list
+
+# --- 非対話モード ---
+if [[ $mode != auto ]]; then
+  scan_tabs
+  if (( ${#picked} == 0 )); then
+    print "直近 ${mins} 分に活動していたタブは見つかりませんでした"
+    print "$HINT"
+    exit 0
+  fi
+  print_list
+  print "\n$HINT"
+  [[ $mode == list ]] && exit 0
+  [[ $mode == run ]] && autorun=1
+  open_rows $picked
+  exit 0
+fi
+
+# --- 対話モード ---
+if (( use_fzf )) && (( $+commands[fzf] )); then
+  run_fzf
+else
+  run_prompt
+fi
