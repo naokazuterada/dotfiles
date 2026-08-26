@@ -374,7 +374,7 @@ alias kamal='docker run -it --rm -v "${PWD}:/workdir" -v /run/host-services/ssh-
 # iTerm2の各タブがどのディレクトリで作業していたかを記録する
 # MAMP起因のカーネルパニックで落ちた際、iTerm2 のセッション復元は効かない
 # （restorable-state.sqlite は正常終了時にしか書かれない）ため、自前で記録しておく。
-# 復元は `claude-tabs` コマンドで行う（functions/claude-tabs）。
+# 復元は `restore-tabs` コマンドで行う（functions/restore-tabs）。
 zmodload -i zsh/datetime
 autoload -Uz add-zsh-hook
 _iterm_tab_log() {

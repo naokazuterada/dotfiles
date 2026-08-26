@@ -1,6 +1,6 @@
 #!/usr/bin/env zsh
 #
-# claude-tabs — クラッシュ直前に開いていた iTerm2 タブを一覧/復元する
+# restore-tabs — クラッシュ直前に開いていた iTerm2 タブを一覧/復元する
 #
 # macOS がカーネルパニックで落ちると iTerm2 のセッション復元は効かない
 # （restorable-state.sqlite は正常終了時にしか書かれないため）。
@@ -13,33 +13,31 @@
 #      claude を起動していないタブの作業ディレクトリ
 #
 # Usage:
-#   claude-tabs [分数]                直近N分(既定120)のタブを fzf で選んで復元する
-#   claude-tabs [分数] --list         一覧を表示するだけ（選択 UI を出さない）
-#   claude-tabs [分数] --open         全件を iTerm2 に cd 済みで開く（claude は入力のみ・実行しない）
-#   claude-tabs [分数] --run          --open に加えて Enter まで押す
-#   claude-tabs [分数] --claude-only  claude セッションのタブだけを対象にする
-#   claude-tabs [分数] --no-fzf       fzf を使わず番号入力で選ぶ
+#   restore-tabs [分数]                直近N分(既定120)のタブを fzf で選んで復元する
+#   restore-tabs [分数] --list         一覧を表示するだけ（選択 UI を出さない）
+#   restore-tabs [分数] --open         全件を iTerm2 に cd 済みで開く
+#   restore-tabs [分数] --claude-only  claude セッションのタブだけを対象にする
+#   restore-tabs [分数] --no-fzf       fzf を使わず番号入力で選ぶ
 #
 # fzf 画面のキー操作:
 #   ↑↓ / Ctrl-J,K   カーソル移動（右下にセッションの中身をプレビュー）
 #   Tab             複数選択（Shift-Tab で解除）
-#   Enter           選んだタブを開く（cd 済み。claude --resume は入力だけで実行しない）
-#   Ctrl-X          選んだタブを開いて Enter まで押す
+#   Enter           選んだタブを cd 済みで開く
 #   Ctrl-T          対象時間を切り替え（30→60→120→240→480→1440分→…）
 #   Ctrl-O          claude セッションのみ ⇔ 全部 を切り替え
 #   Ctrl-R          再読み込み
 #   ESC             中止
 #
 # Example:
-#   claude-tabs 60          # 直近1時間ぶんから選ぶ
-#   claude-tabs 240 --list  # 直近4時間ぶんを一覧するだけ
+#   restore-tabs 60          # 直近1時間ぶんから選ぶ
+#   restore-tabs 240 --list  # 直近4時間ぶんを一覧するだけ
 
 emulate -L zsh
 setopt null_glob extended_glob
 
 local SELF=${0:A}
-local TABLOG=${CLAUDE_TABS_LOG:-~/.iterm-tabs.log}
-local mins=120 mode=auto claude_only=0 autorun=0 use_fzf=1
+local TABLOG=${RESTORE_TABS_LOG:-~/.iterm-tabs.log}
+local mins=120 mode=auto claude_only=0 use_fzf=1
 local -a TIME_PRESETS=(30 60 120 240 480 1440)
 
 # picked の形式: mtime<TAB>種別<TAB>cwd<TAB>セッションID<TAB>jsonlパス
@@ -94,7 +92,7 @@ first_prompt() {
     | grep -v '^[[:space:]]*$' | grep -v '^<' | head -$n | tr '\t\n' '  '
 }
 
-# --- 一覧表示（--list / --open / --run 用）---
+# --- 一覧表示（--list / --open 用）---
 print_list() {
   local line kind cwd sid f mtime first label=""
   local i=0
@@ -119,20 +117,11 @@ print_list() {
 # --- iTerm2 にタブを復元（引数は picked と同じ形式の行）---
 open_rows() {
   local -a target=("$@")
-  local newline_opt="newline no"
-  (( autorun )) && newline_opt="newline yes"
-  local line kind cwd sid cwd_q resume_line
+  local line cwd cwd_q
   for line in $target; do
-    kind=${${(s:	:)line}[2]}
     cwd=${${(s:	:)line}[3]}
-    sid=${${(s:	:)line}[4]}
     cwd_q=${(qq)cwd}
-    # cd はタブを開いた時点で実行し、claude の復帰コマンドは入力だけして残す
-    if [[ $kind == claude ]]; then
-      resume_line="write text \"claude --resume ${sid}\" ${newline_opt}"
-    else
-      resume_line=""
-    fi
+    # タブを開いた時点で cd まで済ませる（コマンドの自動入力はしない）
     /usr/bin/osascript <<EOF
 tell application "iTerm2"
   activate
@@ -144,16 +133,11 @@ tell application "iTerm2"
   tell current session of current window
     delay 0.2
     write text "cd ${cwd_q}" newline yes
-    ${resume_line}
   end tell
 end tell
 EOF
   done
-  if (( autorun )); then
-    print "\n${#target} 個のタブを cd 済みで開き、claude を起動しました"
-  else
-    print "\n${#target} 個のタブを cd 済みで開きました（claude の復帰コマンドは入力だけなので、確認してから Enter）"
-  fi
+  print "\n${#target} 個のタブを cd 済みで開きました"
 }
 
 # --- ログを30日ぶんに切り詰める ---
@@ -206,8 +190,8 @@ header_out() {
   read_state $1
   local target
   (( claude_only )) && target='claude のみ' || target='claude + shell'
-  print -r -- "直近 ${mins} 分 / ${target}    ※ claude-tabs 240 のように分数を渡して起動もできます"
-  print -r -- "Enter=開く  ^X=開いて実行  Tab=複数選択  ^T=時間切替  ^O=claudeのみ  ^R=再読込  ESC=中止"
+  print -r -- "直近 ${mins} 分 / ${target}    ※ restore-tabs 240 のように分数を渡して起動もできます"
+  print -r -- "Enter=開く  Tab=複数選択  ^T=時間切替  ^O=claudeのみ  ^R=再読込  ESC=中止"
 }
 
 # 状態を書き換える（fzf の execute-silent から呼ばれる）
@@ -264,20 +248,19 @@ for a in "$@"; do
   case "$a" in
     --list)        mode=list ;;
     --open)        mode=open ;;
-    --run)         mode=run ;;
     --claude-only) claude_only=1 ;;
     --no-fzf)      use_fzf=0 ;;
     <->)           mins=$a ;;
-    -h|--help)     sed -n '3,40p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
-    *) print -u2 "usage: claude-tabs [分数] [--list|--open|--run] [--claude-only] [--no-fzf]"; exit 1 ;;
+    -h|--help)     awk 'NR>2 { if (!/^#/) exit; sub(/^# ?/, ""); print }' "$0"; exit 0 ;;
+    *) print -u2 "usage: restore-tabs [分数] [--list|--open] [--claude-only] [--no-fzf]"; exit 1 ;;
   esac
 done
 
-local HINT="ヒント: 分数を渡すと範囲を変えられます（例: claude-tabs 240 → 直近240分）"
+local HINT="ヒント: 分数を渡すと範囲を変えられます（例: restore-tabs 240 → 直近240分）"
 
 # --- fzf でカーソル選択 ---
 run_fzf() {
-  local state=$(mktemp "${TMPDIR:-/tmp}/claude-tabs.XXXXXX") || return 2
+  local state=$(mktemp "${TMPDIR:-/tmp}/restore-tabs.XXXXXX") || return 2
   write_state $state
   local reload="reload(${SELF} --_rows ${state})+transform-header(${SELF} --_header ${state})"
   local out rc
@@ -288,7 +271,6 @@ run_fzf() {
     --header "$("$SELF" --_header "$state")" \
     --preview "${SELF} --_preview {1} {2} {3} {4} {5}" \
     --preview-window='down,55%,wrap,border-top' \
-    --expect=ctrl-x \
     --bind "ctrl-t:execute-silent(${SELF} --_state ${state} cycle)+${reload}" \
     --bind "ctrl-o:execute-silent(${SELF} --_state ${state} toggle)+${reload}" \
     --bind "ctrl-r:${reload}")
@@ -298,8 +280,6 @@ run_fzf() {
 
   local -a lines
   lines=("${(@f)out}")
-  [[ ${lines[1]} == ctrl-x ]] && autorun=1
-  shift lines
   lines=(${lines:#})
   (( ${#lines} == 0 )) && { print "何も選択されませんでした"; return 1 }
 
@@ -341,7 +321,7 @@ parse_selection() {
 }
 
 run_prompt() {
-  local reply sel newmins c_label x_label i
+  local reply sel newmins c_label i
   local -a idx words target
   while true; do
     scan_tabs
@@ -353,9 +333,8 @@ run_prompt() {
     print "\n$HINT"
 
     (( claude_only )) && c_label='解除' || c_label='のみ'
-    (( autorun )) && x_label='ON' || x_label='OFF'
-    printf '\n番号=開く（1 3 / 1-3 / a）  t <分>=範囲変更(現在%s分)  c=claude%s  x=自動実行[%s]  q=終了\n> ' \
-      "$mins" "$c_label" "$x_label"
+    printf '\n番号=開く（1 3 / 1-3 / a）  t <分>=範囲変更(現在%s分)  c=claude%s  q=終了\n> ' \
+      "$mins" "$c_label"
     IFS= read -r reply < /dev/tty || { print; return 0; }
     words=(${=reply})
 
@@ -374,10 +353,6 @@ run_prompt() {
         fi
         print ;;
       c|claude)  claude_only=$(( ! claude_only )); print ;;
-      x|run)
-        autorun=$(( ! autorun ))
-        (( autorun )) && x_label='ON' || x_label='OFF'
-        print "自動実行を ${x_label} にしました\n" ;;
       *)
         if sel=$(parse_selection "$reply"); then
           target=()
@@ -407,7 +382,6 @@ if [[ $mode != auto ]]; then
   print_list
   print "\n$HINT"
   [[ $mode == list ]] && exit 0
-  [[ $mode == run ]] && autorun=1
   open_rows $picked
   exit 0
 fi
