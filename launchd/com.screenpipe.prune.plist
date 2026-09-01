@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  screenpipe の古いデータを毎週掃除する。
+
+  screenpipe は1日1GB前後のペースでディスクを食うため、手動の掃除では追いつかない。
+  screenpipe を止めずに動かすので、削除されるのはファイル（動画・ログ）のみ。
+  DB の行削除と VACUUM は screenpipe の停止が必要なので、手動で行う。
+
+  インストール:
+    launchctl bootstrap gui/$(id -u) ~/.dotfiles/launchd/com.screenpipe.prune.plist
+  アンインストール:
+    launchctl bootout gui/$(id -u)/com.screenpipe.prune
+  すぐ試す:
+    launchctl kickstart -p gui/$(id -u)/com.screenpipe.prune
+-->
+<plist version="1.0">
+<dict>
+	<key>Label</key>
+	<string>com.screenpipe.prune</string>
+
+	<key>ProgramArguments</key>
+	<array>
+		<string>/Users/terada/.dotfiles/functions/screenpipe-prune</string>
+		<string>--execute</string>
+		<string>--yes</string>
+	</array>
+
+	<!-- 毎週日曜 4:00。スリープ等で逃した場合は復帰後に1回だけ実行される -->
+	<key>StartCalendarInterval</key>
+	<dict>
+		<key>Weekday</key>
+		<integer>0</integer>
+		<key>Hour</key>
+		<integer>4</integer>
+		<key>Minute</key>
+		<integer>0</integer>
+	</dict>
+
+	<!-- screenpipe 本体の plist と違い KeepAlive は付けない。
+	     失敗しても再実行ループにならないようにするため -->
+	<key>RunAtLoad</key>
+	<false/>
+
+	<key>StandardOutPath</key>
+	<string>/Users/terada/.screenpipe/prune.log</string>
+	<key>StandardErrorPath</key>
+	<string>/Users/terada/.screenpipe/prune.log</string>
+</dict>
+</plist>

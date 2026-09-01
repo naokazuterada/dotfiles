@@ -272,3 +272,14 @@ tell application "System Events"
 end tell
 APPLESCRIPT
 fi
+
+# 月報を作り終えたあとに、screenpipeの古いデータを掃除するか尋ねる。
+# 判定と削除は screenpipe-prune に任せる（掃除のロジックは月報生成とは別の関心事）。
+# 月報用のデータを取り終えたこの位置に置くことで、これから読むデータを
+# 消してしまう心配がない。
+# screenpipe-prune が対象の集計・表示・確認まで面倒を見るので、呼ぶだけでよい
+if command -v screenpipe-prune >/dev/null; then
+  echo ""
+  echo "---"
+  screenpipe-prune --execute
+fi
