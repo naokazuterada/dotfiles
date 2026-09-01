@@ -82,11 +82,36 @@ if [ "$1" = "cache" ]; then
   exit 0
 fi
 
-# 月選択メニューを生成（今月から6ヶ月分 + 自由入力）
+# 月選択メニューを生成する。
+# screenpipe-prune で古いデータを消しているため、無条件に6ヶ月分並べると
+# 取得できない月を選ばせてしまう。実際にデータがある月だけを出す:
+#   - screenpipe に残っている月（DBの最古フレームから今月まで）
+#   - screenpipe からは消えたが、以前取得してキャッシュ済みの月
 generate_month_options() {
-  for i in 0 1 2 3 4 5; do
-    date -v-${i}m +"%Y年%m月"
+  local oldest ym seen=""
+
+  # DBが読めない場合（screenpipe未導入等）は従来どおり6ヶ月分を出す
+  oldest=$(sqlite3 "file:$HOME/.screenpipe/db.sqlite?mode=ro" \
+    "SELECT strftime('%Y-%m', MIN(timestamp)) FROM frames;" 2>/dev/null)
+  [ -n "$oldest" ] || oldest=$(date -v1d -v-5m +%Y-%m)
+
+  # 今月から oldest まで遡る。日を1に固定してから引かないと、月末日に
+  # 実行したとき月を飛ばすことがある
+  for i in $(seq 0 60); do
+    ym=$(date -v1d -v-"${i}"m +%Y-%m)
+    [ "$ym" \< "$oldest" ] && break
+    echo "${ym%-*}年${ym#*-}月"
+    seen="$seen $ym"
   done
+
+  # screenpipe には残っていないが、キャッシュがあるので月報を作れる月
+  for f in "$CACHE_DIR"/*_screenpipe.txt; do
+    [ -f "$f" ] || continue
+    ym=$(basename "$f" | sed 's/_screenpipe\.txt//')
+    case " $seen " in *" $ym "*) continue ;; esac
+    echo "${ym%-*}年${ym#*-}月（キャッシュ）"
+  done | sort -r
+
   echo "その他（自由入力）"
 }
 
@@ -114,11 +139,16 @@ if [ "$SELECTED" = "その他（自由入力）" ]; then
   CACHE_KEY="$INPUT_MONTH"
 else
   # 選択された月から日付範囲を計算 (例: "2024年12月" -> "2024-12")
-  YEAR_MONTH=$(echo "$SELECTED" | sed 's/年/-/; s/月//')
+  # 末尾に「（キャッシュ）」が付くことがあるので、年月だけを取り出す
+  YEAR_MONTH=$(echo "$SELECTED" | sed -E 's/^([0-9]{4})年([0-9]{2})月.*/\1-\2/')
   START_DATE="${YEAR_MONTH}-01T00:00:00Z"
   END_DATE=$(date -j -v+1m -v-1d -f "%Y-%m-%d" "${YEAR_MONTH}-01" "+%Y-%m-%dT23:59:59Z")
   CACHE_KEY="$YEAR_MONTH"
 fi
+
+# プロンプトに埋め込むラベル。「（キャッシュ）」や「その他（自由入力）」を
+# そのまま渡すと不自然な文章になるため、年月表記に揃える
+SELECTED="${CACHE_KEY%-*}年${CACHE_KEY#*-}月"
 
 echo ""
 echo "期間: $START_DATE 〜 $END_DATE"
