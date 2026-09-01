@@ -307,9 +307,12 @@ fi
 # 判定と削除は screenpipe-prune に任せる（掃除のロジックは月報生成とは別の関心事）。
 # 月報用のデータを取り終えたこの位置に置くことで、これから読むデータを
 # 消してしまう心配がない。
-# screenpipe-prune が対象の集計・表示・確認まで面倒を見るので、呼ぶだけでよい
+# screenpipe-prune が対象の集計・表示・確認まで面倒を見るので、呼ぶだけでよい。
+# DB削除とVACUUMには screenpipe の停止が要るが、月報作成中はしばらく作業して
+# いるので止めても支障がない。停止の可否は screenpipe-prune が改めて聞く。
+# 週次のlaunchdはファイル削除だけを行い、screenpipeを止めない分担にしている。
 if command -v screenpipe-prune >/dev/null; then
   echo ""
   echo "---"
-  screenpipe-prune --execute
+  screenpipe-prune --execute --vacuum --stop-screenpipe
 fi

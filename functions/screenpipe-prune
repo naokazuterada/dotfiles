@@ -23,8 +23,13 @@ BATCH=50000        # DB削除の1バッチあたりの frame_id 幅
 
 EXECUTE=0
 ASSUME_YES=0
-VACUUM_ONLY=0
+DO_VACUUM=0
 SKIP_DB=0
+STOP_AGENT=0
+
+# DB を触るあいだ止める launchd サービス
+AGENT_LABEL="com.screenpipe.agent"
+AGENT_PLIST="$HOME/Library/LaunchAgents/${AGENT_LABEL}.plist"
 
 usage() {
   cat <<'HELP'
@@ -36,6 +41,9 @@ screenpipe-prune - screenpipeの古いデータを削除する
   screenpipe-prune --execute --yes    確認なしで削除（launchd等の自動実行用）
   screenpipe-prune --vacuum           DBを圧縮してファイルサイズを縮める
   screenpipe-prune --help             このヘルプ
+
+  DBまで含めて一気に掃除する（geppou が使う形）:
+    screenpipe-prune --execute --vacuum --stop-screenpipe
 
 削除するもの:
   1. 保持期間を過ぎた動画・DB行
@@ -51,11 +59,17 @@ screenpipe-prune - screenpipeの古いデータを削除する
   --skip-db           動画とログのみ削除し、DBは触らない
   --execute           実際に削除する（付けない限り何も消さない）
   --yes               確認プロンプトを省略する
-  --vacuum            削除はせずVACUUMのみ実行する
+  --vacuum            VACUUMを実行する。単体ならVACUUMのみ、--execute と併用
+                      すると削除後にVACUUMする
+  --stop-screenpipe   DB作業のために screenpipe を一時停止する。停止前に別途
+                      承認を求め、作業後（異常終了時も）自動で再起動する
 
-注意:
-  --execute でDBを触る場合と --vacuum は、screenpipe を停止しておく必要がある。
-  VACUUM は DB と同サイズの空き容量と、数十分の時間を要する。
+screenpipe の停止が要る理由:
+  DB を触るあいだ screenpipe が動いていると、ロックで失敗するだけでなく、
+  FTSを作り直している最中に INSERT されて全文検索インデックスが壊れる。
+  --stop-screenpipe を付けない場合、DBフェーズは黙って飛ばしてファイルだけ
+  削除する（起動中でもファイル削除は安全なため）。
+  VACUUM は DB と同サイズの空き容量を要する。
 
 なぜ単純な DELETE ではだめか:
   ocr_text_fts / frames_fts は fts5 の UNINDEXED カラムで frame_id を持つため、
@@ -70,7 +84,8 @@ while [ $# -gt 0 ]; do
     -h|--help) usage; exit 0 ;;
     --execute) EXECUTE=1 ;;
     --yes|-y) ASSUME_YES=1 ;;
-    --vacuum) VACUUM_ONLY=1 ;;
+    --vacuum) DO_VACUUM=1 ;;
+    --stop-screenpipe) STOP_AGENT=1 ;;
     --skip-db) SKIP_DB=1 ;;
     --keep-months) KEEP_MONTHS="$2"; shift ;;
     --log-keep-days) LOG_KEEP_DAYS="$2"; shift ;;
@@ -106,12 +121,103 @@ confirm() {
   case "$ans" in [yY]|[yY][eE][sS]) return 0 ;; *) return 1 ;; esac
 }
 
-# ---------- VACUUM のみ ----------
+# ---------- screenpipe の停止と再起動 ----------
+#
+# DB を触るには screenpipe が止まっている必要がある。ロックの問題だけでなく、
+# 削除中は FTS の削除トリガーを外して FTS を作り直すため、その最中に
+# INSERT されると全文検索インデックスが壊れるのが理由。
 
-if [ "$VACUUM_ONLY" = 1 ]; then
+AGENT_STOPPED=0
+NEED_RESTORE_TRIGGERS=0   # FTSの削除トリガーを外している最中か
+NEED_RESTORE_SCHEMA=0     # VACUUM用にCHECK制約を外している最中か
+VACUUM_RESTORE_SQL=""     # CHECK制約を書き戻すSQLのパス
+
+# FTS の削除トリガーを作り直す
+restore_triggers() {
+  sqlite3 "$DB" "
+CREATE TRIGGER IF NOT EXISTS ocr_text_delete AFTER DELETE ON ocr_text
+BEGIN
+    DELETE FROM ocr_text_fts WHERE frame_id = OLD.frame_id;
+END;
+CREATE TRIGGER IF NOT EXISTS frames_ad AFTER DELETE ON frames
+BEGIN
+    DELETE FROM frames_fts WHERE id = OLD.id;
+END;
+" 2>/dev/null
+}
+
+# VACUUM のために外した CHECK 制約を書き戻す
+restore_schema() {
+  [ -n "$VACUUM_RESTORE_SQL" ] || return 0
+  sqlite3 "$DB" ".read $VACUUM_RESTORE_SQL" 2>/dev/null
+}
+
+# どう終わっても、外したものを戻して screenpipe を起動し直す。
+# 個別に trap を張り替えると、あとから張った側が前の後始末を消してしまうため、
+# 出口はこのハンドラ1つに集約する
+on_exit() {
+  if [ "$NEED_RESTORE_SCHEMA" = 1 ]; then NEED_RESTORE_SCHEMA=0; restore_schema; fi
+  if [ "$NEED_RESTORE_TRIGGERS" = 1 ]; then NEED_RESTORE_TRIGGERS=0; restore_triggers; fi
+  start_agent
+}
+trap on_exit EXIT
+trap 'on_exit; exit 1' INT TERM
+
+start_agent() {
+  [ "$AGENT_STOPPED" = 1 ] || return 0
+  echo "screenpipe を再起動しています..."
+  # bootout は非同期で、直後に bootstrap すると EIO で失敗することがある。
+  # 数回リトライする
+  local tries=0
+  while [ "$tries" -lt 5 ]; do
+    tries=$((tries + 1))
+    if launchctl bootstrap "gui/$(id -u)" "$AGENT_PLIST" 2>/dev/null; then
+      AGENT_STOPPED=0
+      echo "screenpipe を再起動しました"
+      return 0
+    fi
+    sleep 3
+  done
+  echo "警告: screenpipe を再起動できませんでした。手動で実行してください:" >&2
+  echo "  launchctl bootstrap gui/\$(id -u) $AGENT_PLIST" >&2
+  return 1
+}
+
+stop_agent() {
+  screenpipe_running || return 0
+  [ -f "$AGENT_PLIST" ] || {
+    echo "エラー: $AGENT_PLIST が見つかりません" >&2
+    return 1
+  }
+
+  echo ""
+  echo "DB を掃除するには screenpipe を一時的に止める必要があります。"
+  echo "  停止するもの: $AGENT_LABEL"
+  echo "  停止中は画面の記録が行われません（数分程度）"
+  echo "  作業が終わったら自動で再起動します"
+  confirm "screenpipe を停止してよいですか？" || return 1
+
+  launchctl bootout "gui/$(id -u)/$AGENT_LABEL" 2>/dev/null
+  # 停止しても再起動させるため、ここでフラグを立ててから待つ
+  AGENT_STOPPED=1
+
+  local waited=0
+  while [ "$waited" -lt 20 ]; do
+    screenpipe_running || { echo "screenpipe を停止しました"; return 0; }
+    sleep 1
+    waited=$((waited + 1))
+  done
+  echo "エラー: screenpipe が停止しませんでした" >&2
+  return 1
+}
+
+# ---------- VACUUM ----------
+
+do_vacuum() {
+  local before after avail
   if screenpipe_running; then
     echo "エラー: screenpipe が起動中です。VACUUM の前に停止してください。" >&2
-    exit 1
+    return 1
   fi
   before=$(stat -f '%z' "$DB")
   avail=$(df -k "$SP_DIR" | awk 'NR==2{print $4 * 1024}')
@@ -119,9 +225,9 @@ if [ "$VACUUM_ONLY" = 1 ]; then
   echo "空き容量  : $(human "$avail")"
   if [ "$avail" -lt "$before" ]; then
     echo "エラー: VACUUM には DB と同等以上の空き容量が必要です。" >&2
-    exit 1
+    return 1
   fi
-  confirm "VACUUM を実行しますか？（数十分かかります）" || { echo "中止しました"; exit 0; }
+  confirm "VACUUM を実行しますか？（数十分かかります）" || { echo "VACUUM を飛ばしました"; return 0; }
 
   # VACUUM はテーブルを作り直すため、CHECK 制約に sqlite-vec の関数
   # (vec_length 等) を使っているテーブルがあると "no such function" で失敗する。
@@ -129,9 +235,11 @@ if [ "$VACUUM_ONLY" = 1 ]; then
   # macOS標準の sqlite3 は OMIT_LOAD_EXTENSION でビルドされていてロードもできない。
   # そこで writable_schema で CHECK を一時的に外し、VACUUM 後に元へ戻す。
   # （CHECK の有無は行の格納形式に影響しないので、この差し替えは安全）
-  STRIP_SQL=$(mktemp "${TMPDIR:-/tmp}/sp-strip.XXXXXX") || exit 1
-  RESTORE_SQL=$(mktemp "${TMPDIR:-/tmp}/sp-restore.XXXXXX") || exit 1
-  ORIG_TXT=$(mktemp "${TMPDIR:-/tmp}/sp-orig.XXXXXX") || exit 1
+  local STRIP_SQL RESTORE_SQL ORIG_TXT NEED_STRIP
+  STRIP_SQL=$(mktemp "${TMPDIR:-/tmp}/sp-strip.XXXXXX") || return 1
+  RESTORE_SQL=$(mktemp "${TMPDIR:-/tmp}/sp-restore.XXXXXX") || return 1
+  ORIG_TXT=$(mktemp "${TMPDIR:-/tmp}/sp-orig.XXXXXX") || return 1
+  VACUUM_RESTORE_SQL="$RESTORE_SQL"
 
   python3 - "$DB" "$STRIP_SQL" "$RESTORE_SQL" "$ORIG_TXT" <<'PY'
 import re, sqlite3, sys
@@ -190,27 +298,21 @@ PY
 
   NEED_STRIP=$([ -s "$STRIP_SQL" ] && echo 1 || echo 0)
 
-  restore_schema() {
-    [ "$NEED_STRIP" = 1 ] || return 0
-    sqlite3 "$DB" ".read $RESTORE_SQL" 2>/dev/null
-  }
-
   if [ "$NEED_STRIP" = 1 ]; then
     echo "sqlite-vec を使う CHECK 制約を一時的に退避します..."
-    trap 'restore_schema; exit 1' INT TERM
-    trap restore_schema EXIT
-    sqlite3 "$DB" ".read $STRIP_SQL" || { echo "スキーマの退避に失敗しました" >&2; exit 1; }
+    NEED_RESTORE_SCHEMA=1
+    sqlite3 "$DB" ".read $STRIP_SQL" || { echo "スキーマの退避に失敗しました" >&2; return 1; }
   fi
 
   echo "VACUUM 実行中..."
-  time sqlite3 "$DB" "VACUUM;" || { echo "VACUUM に失敗しました" >&2; exit 1; }
+  time sqlite3 "$DB" "VACUUM;" || { echo "VACUUM に失敗しました" >&2; return 1; }
 
   if [ "$NEED_STRIP" = 1 ]; then
     echo "CHECK 制約を書き戻しています..."
-    restore_schema || { echo "スキーマの復元に失敗しました" >&2; exit 1; }
-    trap - EXIT INT TERM
+    restore_schema || { echo "スキーマの復元に失敗しました" >&2; return 1; }
+    NEED_RESTORE_SCHEMA=0
     # 元のスキーマと一字一句同じに戻っているか確認する
-    python3 - "$DB" "$ORIG_TXT" <<'PY' || { echo "警告: スキーマが元と一致しません" >&2; exit 1; }
+    python3 - "$DB" "$ORIG_TXT" <<'PY' || { echo "警告: スキーマが元と一致しません" >&2; return 1; }
 import ast, sqlite3, sys
 db, orig_path = sys.argv[1:3]
 con = sqlite3.connect(f"file:{db}?mode=ro", uri=True)
@@ -228,9 +330,18 @@ PY
     echo "スキーマ復元を確認しました"
   fi
 
-  rm -f "$STRIP_SQL" "$RESTORE_SQL" "$ORIG_TXT"
+  rm -f "$STRIP_SQL" "$ORIG_TXT"
   after=$(stat -f '%z' "$DB")
   echo "完了: $(human "$before") → $(human "$after")"
+}
+
+# ---------- --vacuum 単体（削除はしない） ----------
+
+if [ "$DO_VACUUM" = 1 ] && [ "$EXECUTE" = 0 ]; then
+  if [ "$STOP_AGENT" = 1 ]; then
+    stop_agent || { echo "中止しました"; exit 1; }
+  fi
+  do_vacuum || exit 1
   exit 0
 fi
 
@@ -359,19 +470,24 @@ if [ "$EXECUTE" = 0 ]; then
   exit 0
 fi
 
+echo ""
+confirm "上記を削除しますか？" || { echo "中止しました"; exit 0; }
+
 # DB を触るには screenpipe が止まっている必要があるが、ファイルの削除は
 # 起動中でも安全にできる。全部やめてしまうと geppou からの呼び出しや
 # 定期実行で毎回失敗するので、DBフェーズだけ飛ばして続行する。
+# --stop-screenpipe が付いている場合は、別途承認を取ったうえで停止する。
 DB_SKIPPED=0
 if [ -n "$BOUNDARY" ] && screenpipe_running; then
-  echo ""
-  echo "注意: screenpipe が起動中のため、DB の削除は飛ばします（ファイルのみ削除）。"
-  BOUNDARY=""
-  DB_SKIPPED=1
+  if [ "$STOP_AGENT" = 1 ] && stop_agent; then
+    :
+  else
+    echo ""
+    echo "注意: screenpipe が起動中のため、DB の削除は飛ばします（ファイルのみ削除）。"
+    BOUNDARY=""
+    DB_SKIPPED=1
+  fi
 fi
-
-echo ""
-confirm "上記を削除しますか？" || { echo "中止しました"; exit 0; }
 
 # ---------- 1. 動画 ----------
 
@@ -413,6 +529,10 @@ fi
 # ---------- 3. DB ----------
 
 if [ -z "$BOUNDARY" ]; then
+  if [ "$DO_VACUUM" = 1 ] && [ "$DB_SKIPPED" = 0 ]; then
+    echo ""
+    do_vacuum
+  fi
   echo ""
   echo "完了。"
   if [ "$DB_SKIPPED" = 1 ]; then
@@ -430,22 +550,8 @@ echo "[3/3] DB の古い行を削除中..."
 sq() { sqlite3 "$DB" "$@"; }
 
 # 削除トリガーを外す。外したまま終了するとFTSが壊れたままになるので、
-# どう終わっても必ず作り直す
-restore_triggers() {
-  sq "
-CREATE TRIGGER IF NOT EXISTS ocr_text_delete AFTER DELETE ON ocr_text
-BEGIN
-    DELETE FROM ocr_text_fts WHERE frame_id = OLD.frame_id;
-END;
-CREATE TRIGGER IF NOT EXISTS frames_ad AFTER DELETE ON frames
-BEGIN
-    DELETE FROM frames_fts WHERE id = OLD.id;
-END;
-" 2>/dev/null
-}
-trap 'restore_triggers; exit 1' INT TERM
-trap restore_triggers EXIT
-
+# フラグを立てて on_exit に後始末を任せる
+NEED_RESTORE_TRIGGERS=1
 sq "DROP TRIGGER IF EXISTS ocr_text_delete; DROP TRIGGER IF EXISTS frames_ad;" \
   || { echo "トリガーの削除に失敗しました" >&2; exit 1; }
 
@@ -502,11 +608,18 @@ FROM frames;
 " || { echo "FTSの再構築に失敗しました" >&2; exit 1; }
 
 restore_triggers
-trap - EXIT INT TERM
+NEED_RESTORE_TRIGGERS=0
 
 sq "PRAGMA wal_checkpoint(TRUNCATE);" >/dev/null
 
+if [ "$DO_VACUUM" = 1 ]; then
+  echo ""
+  do_vacuum
+else
+  echo ""
+  echo "DB ファイルは $(human "$(stat -f '%z' "$DB")") のままです（空きページが再利用されます）。"
+  echo "ファイルサイズを実際に縮めるには: screenpipe-prune --vacuum"
+fi
+
 echo ""
 echo "完了。"
-echo "DB ファイルは $(human "$(stat -f '%z' "$DB")") のままです（空きページが再利用されます）。"
-echo "ファイルサイズを実際に縮めるには: screenpipe-prune --vacuum"
