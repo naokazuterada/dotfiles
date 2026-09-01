@@ -18,6 +18,7 @@ DATA_DIR="$SP_DIR/data"
 
 KEEP_MONTHS=2      # 今月を含めて何ヶ月分の動画/DBを残すか
 LOG_KEEP_DAYS=7    # ログを何日分残すか
+MAX_LOG_MB=100     # ローテートされないログをこのサイズで切り詰める
 BATCH=50000        # DB削除の1バッチあたりの frame_id 幅
 
 EXECUTE=0
@@ -41,10 +42,12 @@ screenpipe-prune - screenpipeの古いデータを削除する
   2. どの video_chunks からも参照されていない動画（録画されたがDB登録に失敗した
      もの。OCRテキストがないので検索にかからず、再生対象にもならない）
   3. 保持期間を過ぎたログ
+  4. 日付ローテートされないログのうち肥大化したもの（削除ではなく切り詰め）
 
 オプション:
   --keep-months N     動画とDBを今月含めNヶ月分残す（既定: 2 = 今月と先月）
   --log-keep-days N   ログをN日分残す（既定: 7）
+  --max-log-mb N      ローテートされないログをNMBで切り詰める（既定: 100）
   --skip-db           動画とログのみ削除し、DBは触らない
   --execute           実際に削除する（付けない限り何も消さない）
   --yes               確認プロンプトを省略する
@@ -71,6 +74,7 @@ while [ $# -gt 0 ]; do
     --skip-db) SKIP_DB=1 ;;
     --keep-months) KEEP_MONTHS="$2"; shift ;;
     --log-keep-days) LOG_KEEP_DAYS="$2"; shift ;;
+    --max-log-mb) MAX_LOG_MB="$2"; shift ;;
     *) echo "不明なオプション: $1" >&2; echo "screenpipe-prune --help を参照" >&2; exit 1 ;;
   esac
   shift
@@ -263,6 +267,19 @@ old_logs() {
     | awk -F. -v c="$LOG_CUTOFF" '$2 < c'
 }
 
+# 日付ローテートの対象外で、screenpipe が開きっぱなしにしているログ
+# （stderr等）が異常に膨らんだ場合の受け皿。起動失敗のループに入ると
+# 1日で10GB規模まで育つ実績があるため、上限を超えたら中身を捨てる。
+# 削除ではなく切り詰めなのは、開いているファイルを消してもファイルハンドルが
+# 残る限り容量が解放されないため。
+oversized_logs() {
+  # 単位は大文字 M。小文字 m は GNU find の書式で、BSD find でも bfs でも通らない
+  find "$SP_DIR" -maxdepth 1 -type f -name '*.log' -size +"${MAX_LOG_MB}"M 2>/dev/null \
+    | sed 's|.*/||' \
+    | grep -vE '^screenpipe\.[0-9]{4}-[0-9]{2}-[0-9]{2}\.log$' \
+    | sort
+}
+
 # どの video_chunks からも参照されていない mp4。録画はされたが DB 登録に失敗した
 # ファイルで、OCRテキストがないため検索にもかからず、再生対象にもならない。
 # 書き込み途中のファイルを巻き込まないよう、更新から60分以上経ったものだけを見る。
@@ -288,6 +305,7 @@ sum_size() {
 
 VIDEO_LIST=$(old_videos)
 LOG_LIST=$(old_logs)
+BIGLOG_LIST=$(oversized_logs)
 # 期限切れとして消す分は除く（二重計上と二重削除を避ける）。
 # old_videos は ls 由来、orphan_videos は comm 由来でどちらもソート済み
 ORPHAN_LIST=$(comm -23 <(orphan_videos) <(printf '%s\n' "$VIDEO_LIST"))
@@ -295,13 +313,16 @@ ORPHAN_LIST=$(comm -23 <(orphan_videos) <(printf '%s\n' "$VIDEO_LIST"))
 VIDEO_N=$(printf '%s' "$VIDEO_LIST" | grep -c . || true)
 LOG_N=$(printf '%s' "$LOG_LIST" | grep -c . || true)
 ORPHAN_N=$(printf '%s' "$ORPHAN_LIST" | grep -c . || true)
+BIGLOG_N=$(printf '%s' "$BIGLOG_LIST" | grep -c . || true)
 VIDEO_SIZE=$([ "$VIDEO_N" -gt 0 ] && printf '%s\n' "$VIDEO_LIST" | sum_size "$DATA_DIR" || echo 0)
 LOG_SIZE=$([ "$LOG_N" -gt 0 ] && printf '%s\n' "$LOG_LIST" | sum_size "$SP_DIR" || echo 0)
 ORPHAN_SIZE=$([ "$ORPHAN_N" -gt 0 ] && printf '%s\n' "$ORPHAN_LIST" | sum_size "$DATA_DIR" || echo 0)
+BIGLOG_SIZE=$([ "$BIGLOG_N" -gt 0 ] && printf '%s\n' "$BIGLOG_LIST" | sum_size "$SP_DIR" || echo 0)
 
 echo "動画(期限切れ): ${VIDEO_N} 件  $(human "$VIDEO_SIZE")"
 echo "動画(DB未登録): ${ORPHAN_N} 件  $(human "$ORPHAN_SIZE")"
-echo "ログ          : ${LOG_N} 件  $(human "$LOG_SIZE")"
+echo "ログ(期限切れ): ${LOG_N} 件  $(human "$LOG_SIZE")"
+echo "ログ(肥大化)  : ${BIGLOG_N} 件  $(human "$BIGLOG_SIZE")  ※削除ではなく切り詰め"
 
 # DB は frames.id が timestamp と単調に対応するので、境界 id を1回引けば
 # 以降は id 範囲で高速に消せる（timestamp 比較を毎回やるより速い）
@@ -322,11 +343,12 @@ if [ "$SKIP_DB" = 0 ] && [ -f "$DB" ]; then
   fi
 fi
 
-TOTAL=$((VIDEO_SIZE + ORPHAN_SIZE + LOG_SIZE))
+TOTAL=$((VIDEO_SIZE + ORPHAN_SIZE + LOG_SIZE + BIGLOG_SIZE))
 echo ""
 echo "ファイル削除で空く容量: $(human "$TOTAL")"
 
-if [ "$VIDEO_N" = 0 ] && [ "$ORPHAN_N" = 0 ] && [ "$LOG_N" = 0 ] && [ -z "$BOUNDARY" ]; then
+if [ "$VIDEO_N" = 0 ] && [ "$ORPHAN_N" = 0 ] && [ "$LOG_N" = 0 ] \
+   && [ "$BIGLOG_N" = 0 ] && [ -z "$BOUNDARY" ]; then
   echo "削除するものはありません"
   exit 0
 fi
@@ -374,6 +396,17 @@ if [ "$LOG_N" -gt 0 ]; then
   echo "[2/3] ログを削除中 (${LOG_N} 件)..."
   printf '%s\n' "$LOG_LIST" | awk -v d="$SP_DIR" '{print d "/" $0}' \
     | tr '\n' '\0' | xargs -0 rm -f
+  echo "      完了"
+fi
+
+if [ "$BIGLOG_N" -gt 0 ]; then
+  echo "      肥大化したログを切り詰め中 (${BIGLOG_N} 件)..."
+  # zsh の noclobber 下でも通るよう >| を使う（このスクリプトは bash だが、
+  # 同じ書き方に揃えておく）
+  printf '%s\n' "$BIGLOG_LIST" | while IFS= read -r f; do
+    [ -n "$f" ] || continue
+    : >| "$SP_DIR/$f"
+  done
   echo "      完了"
 fi
 

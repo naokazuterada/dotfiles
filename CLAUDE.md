@@ -24,7 +24,7 @@ Rakefileが `etc/` 配下のファイルを `~/.ファイル名` として、`zs
   - `vpn_timer` — AppleScript経由でVPN接続/タイマー切断を管理（zsh・ターミナル版）
   - `restore-tabs` — クラッシュ直前に開いていたiTerm2タブを一覧し、fzf で選んで復元（zsh）。`~/.claude/projects/` のセッション履歴と、zshrcの `_iterm_tab_log` フックが書く `~/.iterm-tabs.log` を突き合わせる
   - `screenpipe-prune` — screenpipe の古いデータ（動画・ログ・DB行）を保持期間で削除（bash）。`geppou` の最後から呼ばれるほか、`launchd/` の plist で週次実行する。既定は dry-run で、`--execute` を付けるまで何も消さない
-- **`launchd/`** — launchd の plist。Rakeの対象外なので手動で `launchctl bootstrap` する（手順は各plist内のコメント参照）
+- **`launchd/`** — launchd の plist。`rake launchd:link` で `~/Library/LaunchAgents/` にシンボリックリンクされる。**ログイン時に自動ロードされるのは `~/Library/LaunchAgents/` 配下だけ**なので、`launchctl bootstrap` にリポジトリ内のパスを直接渡してはいけない（そのログインセッション限りで消える）。初回のみリンク後に `launchctl bootstrap` が必要
 - **`vpn-timer/`** — VPN TimerのmacOSアプリ版（.app）。ソースとREADMEを格納。詳細は `vpn-timer/README.md` を参照
 - **`install.sh`** — 初回セットアップスクリプト。`rake setup` + ツールインストール
 - **`zsh/install-tools.sh`** — Homebrew経由で依存ツール（peco, jq, gibo, shellcheck等）をインストール

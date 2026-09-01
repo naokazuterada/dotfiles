@@ -31,7 +31,8 @@ CLEAN.concat(cleans.map{|c| File.join(HOME,c)})
 task :default => :setup
 task :setup => [
               "zsh:link",
-              "etc:link"
+              "etc:link",
+              "launchd:link"
             ]
 
 namespace :zsh do
@@ -71,5 +72,21 @@ namespace :etc do
   task :link do
     files  =  Dir.glob("etc" +  "/*").map{|path| File.basename(path)}
     same_name_symlinks File.join(PWD, "etc"), files
+  end
+end
+
+namespace :launchd do
+  # launchd がログイン時に自動ロードするのは ~/Library/LaunchAgents 配下だけなので、
+  # リポジトリ内の plist をそこへリンクする。`launchctl bootstrap` にリポジトリ内の
+  # パスを直接渡すと、そのログインセッション限りで消えてしまう。
+  # リンクしただけでは起動しないので、初回は bootstrap が必要:
+  #   launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/<label>.plist
+  desc "Create symbolic links to ~/Library/LaunchAgents"
+  task :link do
+    dest_dir = File.join(HOME, "Library", "LaunchAgents")
+    FileUtils.mkdir_p(dest_dir)
+    Dir.glob(File.join(PWD, "launchd", "*.plist")).each do |src|
+      symlink_ src, File.join(dest_dir, File.basename(src))
+    end
   end
 end

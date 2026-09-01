@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  screenpipe 本体の常駐設定。
+
+  screenpipe のインストーラが置いた元の plist には2つ問題があったため差し替える。
+
+  1. StandardOutPath が /tmp/screenpipe.log を指しており、ローテートなしで
+     無限に追記されていた。screenpipe は自前で ~/.screenpipe/screenpipe.
+     YYYY-MM-DD.log に日次ローテート付きで同じ内容を書いているので、これは
+     完全な重複。実際に1日で13GBまで膨らんだ。よって stdout は捨てる。
+     stderr だけは残す（panic はこちらにしか出ず、障害調査で必要になる）。
+     置き場所を ~/.screenpipe にすることで screenpipe-prune の管理下に入る。
+
+  2. KeepAlive があるのに ThrottleInterval が未指定だった。既定の10秒間隔で
+     再起動を繰り返すため、起動直後に落ちる状態になると再起動ループに陥り、
+     ログを猛烈な勢いで書き続ける。60秒に広げて暴走の勢いを落とす。
+
+  インストール:
+    rake launchd:link
+    launchctl bootout   gui/$(id -u)/com.screenpipe.agent
+    launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.screenpipe.agent.plist
+-->
+<plist version="1.0">
+<dict>
+	<key>Label</key>
+	<string>com.screenpipe.agent</string>
+
+	<!-- fps 0.2 = 5秒に1枚。既定の 0.5（2秒に1枚）だと3画面で月25〜35GBのペース。
+	     geppou は月報生成時に500件しか読まないので、下げても月報の質には
+	     ほぼ影響しない -->
+	<key>ProgramArguments</key>
+	<array>
+		<string>/Users/terada/.local/bin/screenpipe</string>
+		<string>--disable-telemetry</string>
+		<string>--fps</string>
+		<string>0.2</string>
+	</array>
+
+	<key>RunAtLoad</key>
+	<true/>
+
+	<key>KeepAlive</key>
+	<true/>
+
+	<!-- 落ちてもすぐには再起動しない。再起動ループの暴走を抑えるため -->
+	<key>ThrottleInterval</key>
+	<integer>60</integer>
+
+	<!-- screenpipe 自身が ~/.screenpipe/screenpipe.YYYY-MM-DD.log に
+	     日次ローテート付きで書くので、stdout は捨てる -->
+	<key>StandardOutPath</key>
+	<string>/dev/null</string>
+
+	<!-- panic はここにしか出ないので残す。肥大化しても screenpipe-prune が
+	     切り詰める -->
+	<key>StandardErrorPath</key>
+	<string>/Users/terada/.screenpipe/screenpipe-stderr.log</string>
+</dict>
+</plist>
